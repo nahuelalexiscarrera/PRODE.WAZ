@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Predictions · Server Queries
+ * PRODE.WAZ — Predictions · Server Queries
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -33,7 +33,10 @@ export async function getMyPredictionsForMatches(
     .select("id, match_id, home_score, away_score, points_earned")
     .eq("user_id", userId)
     .in("match_id", matchIds);
-  if (error) throw error;
+  if (error) {
+    console.error("[getMyPredictionsForMatches] query falló", error.message);
+    return {};
+  }
   const map: Record<string, PredictionRow> = {};
   for (const p of data ?? []) {
     map[p.match_id] = p as PredictionRow;

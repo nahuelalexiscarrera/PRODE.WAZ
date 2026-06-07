@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Seed Script
+ * PRODE.WAZ — Seed Script
  * Inserta los datos del Mundial 2026 en la DB de Supabase.
  *
  * Uso: node scripts/seed.mjs
@@ -287,7 +287,7 @@ async function seedAchievements() {
 // ─── Main ─────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("Iniciando seed de O2 PRODE — Mundial 2026...\n");
+  console.log("Iniciando seed de PRODE.WAZ — Mundial 2026...\n");
   try {
     await seedTournament();
     await seedGroups();

@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Button primitive
+ * PRODE.WAZ — Button primitive
  * Spec: Agente 3 §9.1, Agente 6 M01 (tap variants)
  */
 

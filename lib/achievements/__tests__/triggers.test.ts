@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * O2 PRODE — Achievement Triggers · Test Suite
+ * PRODE.WAZ — Achievement Triggers · Test Suite
  *
  * Covers every evaluator (19 achievements) + evaluateForEvent scope filtering.
  * All tests are pure: no DB, no side effects.

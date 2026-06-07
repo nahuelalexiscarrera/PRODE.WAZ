@@ -2,7 +2,7 @@
 
 ## ¿Para qué sirven?
 
-O2 PRODE manda 2 mails automáticos desde Supabase:
+PRODE.WAZ manda 2 mails automáticos desde Supabase:
 
 1. **Confirmar cuenta** — cuando un socio se registra, le llega un mail con un botón
    para activar la cuenta. Hasta que no lo confirma, no puede entrar (esto evita
@@ -17,8 +17,8 @@ y deja entrar (o manda a elegir contraseña nueva). Por eso el `href` del botón
 ## Cómo cargarlos (una sola vez)
 
 1. Supabase → tu proyecto → **Authentication** → **URL Configuration**:
-   - **Site URL**: tu dominio de Vercel (ej. `https://o2-prode.vercel.app`).
-   - **Redirect URLs**: agregá `https://o2-prode.vercel.app/**`.
+   - **Site URL**: tu dominio de Vercel (ej. `https://prode-waz.vercel.app`).
+   - **Redirect URLs**: agregá `https://prode-waz.vercel.app/**`.
 2. **Authentication** → **Emails** → **Templates**:
    - Pestaña **Confirm signup** → pegá el Subject + HTML de abajo.
    - Pestaña **Reset Password** → pegá el Subject + HTML de abajo.
@@ -33,7 +33,7 @@ y deja entrar (o manda a elegir contraseña nueva). Por eso el `href` del botón
 **Subject:**
 
 ```
-Confirmá tu cuenta — O2 PRODE
+Confirmá tu cuenta — PRODE.WAZ
 ```
 
 **Message body (HTML):**
@@ -46,14 +46,14 @@ Confirmá tu cuenta — O2 PRODE
         <span style="font-size:34px;font-weight:800;color:#FF6A00;">O2</span><span style="font-size:13px;color:#888;letter-spacing:3px;font-weight:700;"> PRODE</span>
       </td></tr>
       <tr><td style="padding:16px 32px 0;">
-        <h1 style="margin:0;font-size:24px;line-height:1.25;color:#ffffff;font-weight:800;">Bienvenido a O2 PRODE</h1>
+        <h1 style="margin:0;font-size:24px;line-height:1.25;color:#ffffff;font-weight:800;">Bienvenido a PRODE.WAZ</h1>
         <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#b4b4b8;">Activá tu cuenta para empezar a predecir el Mundial 2026 y competir con los socios del club.</p>
       </td></tr>
       <tr><td style="padding:28px 32px 0;">
         <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup" style="display:block;background:#D9FF3F;color:#0a0a0c;font-size:16px;font-weight:800;text-decoration:none;text-align:center;padding:16px;border-radius:12px;">Confirmar mi cuenta</a>
       </td></tr>
       <tr><td style="padding:20px 32px 32px;">
-        <p style="margin:0;font-size:12px;line-height:1.5;color:#6b6b70;">Si no te registraste en O2 PRODE, ignorá este mail.</p>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#6b6b70;">Si no te registraste en PRODE.WAZ, ignorá este mail.</p>
         <p style="margin:16px 0 0;font-size:11px;color:#FFB300;letter-spacing:1px;font-weight:700;">#PRODEMUNDIALO2</p>
       </td></tr>
     </table>
@@ -68,7 +68,7 @@ Confirmá tu cuenta — O2 PRODE
 **Subject:**
 
 ```
-Recuperá tu contraseña — O2 PRODE
+Recuperá tu contraseña — PRODE.WAZ
 ```
 
 **Message body (HTML):**

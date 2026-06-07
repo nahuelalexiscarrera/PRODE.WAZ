@@ -1,10 +1,11 @@
 {
-  "name": "o2-prode",
+  "name": "prode-waz",
   "version": "0.1.0",
   "private": true,
-  "description": "O2 PRODE — App de predicción del Mundial 2026 para socios del gimnasio O2.",
+  "description": "PRODE.WAZ — App de predicción del Mundial 2026 para socios del gimnasio O2.",
   "scripts": {
     "dev": "next dev --turbo",
+    "prebuild": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
     "build": "next build",
     "start": "next start",
     "lint": "biome lint .",
@@ -12,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "supabase:types": "supabase gen types typescript --local > types/database.ts",
+    "supabase:types": "npx supabase gen types typescript --linked > types/database.ts",
     "seed": "node scripts/seed.mjs",
     "seed:invites": "node scripts/seed-invites.mjs",
     "seed:storage": "node scripts/setup-db-extras.mjs"

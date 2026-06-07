@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Edge middleware (auth gate)
+ * PRODE.WAZ — Edge middleware (auth gate)
  * Agente 7 · Next.js Architect
  *
  * Guards all routes under /app/** by checking Supabase auth cookie.

@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/GoogleChrome/lighthouse-ci/main/docs/configuration.md",
   "_meta": {
     "agent": "Agent 14 · QA & Performance",
-    "context": "Lighthouse CI budget for O2 PRODE. Mobile-first targets."
+    "context": "Lighthouse CI budget for PRODE.WAZ. Mobile-first targets."
   },
   "ci": {
     "collect": {

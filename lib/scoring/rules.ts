@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Scoring Rules (constants)
+ * PRODE.WAZ — Scoring Rules (constants)
  * Agente 9 · Game Logic
  *
  * Source of truth for all scoring values. Mirror in SQL `fn_calculate_points`.

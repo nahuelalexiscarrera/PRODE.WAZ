@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Playwright config
+ * PRODE.WAZ — Playwright config
  * Agente 14 · QA & Performance
  *
  * Runs 4 critical e2e flows × 3 viewports.

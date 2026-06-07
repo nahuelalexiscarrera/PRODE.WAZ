@@ -1,4 +1,4 @@
-# O2 PRODE — Final Checkpoint & Project Closure
+# PRODE.WAZ — Final Checkpoint & Project Closure
 
 **Task #15 · Review integral**
 Fecha: 2026-05-19
@@ -9,7 +9,7 @@ Estado: **Sistema de diseño + arquitectura cerrados. Listo para cotización + d
 
 ## 1. Resumen ejecutivo
 
-**O2 PRODE** es una app de predicción del Mundial 2026 para los ~800 socios del gimnasio O2. Construida con Next.js 15 (App Router + TypeScript strict), Supabase (auth + DB + Realtime), Framer Motion, Tailwind con design tokens propios. Mobile-first PWA, idioma único es-AR, dark mode exclusivo.
+**PRODE.WAZ** es una app de predicción del Mundial 2026 para los ~800 socios del gimnasio O2. Construida con Next.js 15 (App Router + TypeScript strict), Supabase (auth + DB + Realtime), Framer Motion, Tailwind con design tokens propios. Mobile-first PWA, idioma único es-AR, dark mode exclusivo.
 
 El proyecto pasó por **14 agentes especializados** + 3 ciclos de revisión. Producto:
 - 15 documentos de arquitectura (`docs/01-15_*.md` + 2 extensiones)
@@ -254,7 +254,7 @@ Para que esto pase de **arquitectura cerrada** a **producto en vivo**:
 
 ## 9. Sign-off del proyecto
 
-El sistema de diseño y arquitectura de O2 PRODE está **cerrado**. Cada agente cumplió su rol, los handoffs están explícitos, las decisiones documentadas, las dependencias identificadas.
+El sistema de diseño y arquitectura de PRODE.WAZ está **cerrado**. Cada agente cumplió su rol, los handoffs están explícitos, las decisiones documentadas, las dependencias identificadas.
 
 El proyecto está listo para:
 - ✅ Cotización completa.

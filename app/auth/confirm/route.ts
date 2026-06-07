@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Confirmación de email (Server-Side Auth).
+ * PRODE.WAZ — Confirmación de email (Server-Side Auth).
  *
  * El link del mail apunta acá con ?token_hash=...&type=signup. Verificamos el
  * token (verifyOtp, que NO depende del code-verifier → funciona aunque el mail
@@ -10,75 +10,28 @@
  * el template "Confirm signup" apuntando a {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup
  */
 
-import { type EmailOtpType } from "@supabase/supabase-js";
-import { type NextRequest } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
+import type { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { deriveInitials } from "@/lib/auth/initials";
-
-/** Crea la fila en `user` la primera vez que el socio confirma (idempotente). */
-async function ensureUserRow(): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const admin = createAdminClient();
-  const { data: existing } = await admin
-    .from("user")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (existing) return;
-
-  const meta = (user.user_metadata ?? {}) as {
-    name?: string;
-    phone?: string | null;
-    referralCode?: string;
-  };
-  const name = (meta.name && meta.name.trim()) || user.email?.split("@")[0] || "Socio";
-  await admin.from("user").insert({
-    id: user.id,
-    email: user.email,
-    name,
-    initials: deriveInitials(name),
-    phone: meta.phone ?? null,
-  });
-
-  // Referidos: genera el código propio + linkea al referidor si vino uno.
-  // Graceful: si las columnas referral_code/referred_by no existen todavía
-  // (antes de la migración), el update falla en silencio y no rompe el registro.
-  const updates: Record<string, unknown> = {
-    referral_code: crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase(),
-  };
-  if (meta.referralCode) {
-    const { data: referrer } = await admin
-      .from("user")
-      .select("id")
-      .eq("referral_code", meta.referralCode.toUpperCase())
-      .maybeSingle();
-    if (referrer && referrer.id !== user.id) updates.referred_by = referrer.id;
-  }
-  await admin.from("user").update(updates).eq("id", user.id);
-}
+import { ensureCurrentUserRow } from "@/lib/auth/ensure-user";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const nextParam = searchParams.get("next");
-  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/app";
+  const next = nextParam?.startsWith("/") ? nextParam : "/app";
 
   if (token_hash && type) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
     if (!error) {
-      try {
-        await ensureUserRow();
-      } catch (e) {
-        console.error("[auth/confirm] ensureUserRow falló", e);
+      // ensureUserRow solo es necesario en el primer signup (crea la fila en DB).
+      // En recovery el user ya existe → lo saltamos para no desperdiciar queries
+      // ni riesgo de race conditions en datos ya populados.
+      if (type !== "recovery") {
+        await ensureCurrentUserRow();
       }
       redirect(next);
     }

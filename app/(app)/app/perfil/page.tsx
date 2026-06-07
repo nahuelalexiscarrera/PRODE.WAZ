@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile, getIsAdmin, getMyReferral } from "@/lib/users/queries";
+import { isSuperAdmin } from "@/lib/brands/queries";
 import { ReferralCard } from "@/components/features/ReferralCard";
 import { getMyPredictionCount } from "@/lib/predictions/queries";
 import { getLevelMeta } from "@/lib/achievements/levels";
@@ -18,10 +19,11 @@ export default async function PerfilPage() {
   if (error || !data?.user) redirect("/login");
   const user = data.user;
 
-  const [profile, predictionCount, isAdmin, referral] = await Promise.all([
+  const [profile, predictionCount, isAdmin, superAdmin, referral] = await Promise.all([
     getMyProfile(),
     getMyPredictionCount(user.id),
     getIsAdmin(),
+    isSuperAdmin(),
     getMyReferral(),
   ]);
 
@@ -70,6 +72,7 @@ export default async function PerfilPage() {
 
       {/* Navigation */}
       <div className="mx-4 bg-card rounded-xl border border-border overflow-hidden">
+        {superAdmin && <NavRow href="/app/super-admin" label="Super Admin · marcas" />}
         {isAdmin && <NavRow href="/app/admin" label="Panel de admin" />}
         <NavRow href="/app/perfil/logros" label="Logros" />
         <NavRow href="/app/perfil/notificaciones" label="Notificaciones" />

@@ -1,7 +1,7 @@
 {
-  "$schema": "https://o2-prode.local/schema/share-spec.json",
+  "$schema": "https://prode-waz.local/schema/share-spec.json",
   "_meta": {
-    "name": "O2 PRODE Share Templates · Declarative Spec",
+    "name": "PRODE.WAZ Share Templates · Declarative Spec",
     "version": "1.0.0",
     "agent": "Agent 5 · Viral Share Designer",
     "date": "2026-05-18"

@@ -1,7 +1,7 @@
 {
-  "name": "O2 PRODE",
-  "short_name": "O2 PRODE",
-  "description": "El prode del Mundial 2026 para socios del gimnasio O2.",
+  "name": "PRODE.WAZ",
+  "short_name": "PRODE.WAZ",
+  "description": "El prode del Mundial 2026 para tu comunidad.",
   "start_url": "/app",
   "display": "standalone",
   "background_color": "#0B0B0D",

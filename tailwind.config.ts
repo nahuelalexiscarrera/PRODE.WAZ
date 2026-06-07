@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Tailwind Config
+ * PRODE.WAZ — Tailwind Config
  * Agente 3 · Design System
  * Source of truth: design/tokens.json + app/styles/globals.css
  */

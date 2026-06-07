@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Seed Invites (Sprint 8 · Beta cerrada)
+ * PRODE.WAZ — Seed Invites (Sprint 8 · Beta cerrada)
  *
  * Inserta invite codes en la tabla `invite_code` para los socios beta.
  *

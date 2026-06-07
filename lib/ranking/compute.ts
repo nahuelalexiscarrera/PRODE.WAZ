@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Ranking Compute
+ * PRODE.WAZ — Ranking Compute
  * Agente 9 · Game Logic
  *
  * Pure functions to compute ranking from a list of users with points.
@@ -81,7 +81,7 @@ export function rankingContextWindow(
  * Thresholds defined in Agente 2 §10.4.
  */
 export function pointsToLevel(points: number): { level: UserLevel; levelName: string } {
-  if (points >= 501) return { level: 5, levelName: "Leyenda O2" };
+  if (points >= 501) return { level: 5, levelName: "Leyenda" };
   if (points >= 301) return { level: 4, levelName: "Crack" };
   if (points >= 151) return { level: 3, levelName: "Pro" };
   if (points >= 51) return { level: 2, levelName: "Aplicado" };

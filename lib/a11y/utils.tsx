@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Accessibility Utilities
+ * PRODE.WAZ — Accessibility Utilities
  * Agente 12 · Accessibility Auditor
  *
  * Pure helpers + React hooks for ARIA, focus management, contrast.

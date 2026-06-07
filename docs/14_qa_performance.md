@@ -1,4 +1,4 @@
-# O2 PRODE — QA & Performance Plan
+# PRODE.WAZ — QA & Performance Plan
 
 **Agente 14 · QA & Performance**
 Versión 1.0 · 2026-05-19

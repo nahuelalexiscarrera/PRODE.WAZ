@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Achievements · Public API
+ * PRODE.WAZ — Achievements · Public API
  * Agente 11 · Gamification
  */
 

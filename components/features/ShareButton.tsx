@@ -7,15 +7,24 @@ import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { shareToWall, recordShareAction } from "@/lib/share/actions";
+import { useBrand } from "@/components/providers/BrandProvider";
 import { cn } from "@/lib/utils/cn";
 import type { ShareTemplateId, ShareFormat } from "@/lib/share/templates";
 
-const WALL_BODY: Record<ShareTemplateId, string> = {
-  position: "Mi posición en el PRODE MUNDIAL O2",
-  match: "Mi predicción para el Mundial",
-  achievement: "Desbloqueé un logro en el prode",
-  summary: "Mi resumen del Mundial",
-};
+/** Texto del post al muro. El de "posición" lleva el hashtag de la marca activa
+ *  (ej. "PRODE MUNDIAL WAZ" / "PRODE MUNDIAL O2") — antes hardcodeaba "O2". */
+function wallBody(template: ShareTemplateId, hashtagSuffix: string): string {
+  switch (template) {
+    case "position":
+      return `Mi posición en el PRODE MUNDIAL ${hashtagSuffix}`;
+    case "match":
+      return "Mi predicción para el Mundial";
+    case "achievement":
+      return "Desbloqueé un logro en el prode";
+    case "summary":
+      return "Mi resumen del Mundial";
+  }
+}
 
 interface ShareButtonProps {
   template: ShareTemplateId;
@@ -37,10 +46,15 @@ export function ShareButton({
   const [downloading, setDownloading] = useState(false);
   const [posting, setPosting] = useState(false);
   const { toast } = useToast();
+  const brand = useBrand();
 
   async function handlePostToWall() {
     setPosting(true);
-    const res = await shareToWall({ template, contextId, body: WALL_BODY[template] });
+    const res = await shareToWall({
+      template,
+      contextId,
+      body: wallBody(template, brand?.hashtagSuffix ?? "WAZ"),
+    });
     setPosting(false);
     if (res.ok) {
       toast({ variant: "success", message: "¡Publicado en el muro!" });
@@ -63,7 +77,7 @@ export function ShareButton({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `o2-prode-${template}.png`;
+      a.download = `prode-waz-${template}.png`;
       a.click();
       URL.revokeObjectURL(url);
       toast({ variant: "success", message: "¡Imagen guardada!" });
@@ -79,7 +93,7 @@ export function ShareButton({
     try {
       const res = await fetch(imageUrl);
       const blob = await res.blob();
-      const file = new File([blob], `o2-prode-${template}.png`, { type: "image/png" });
+      const file = new File([blob], `prode-waz-${template}.png`, { type: "image/png" });
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({

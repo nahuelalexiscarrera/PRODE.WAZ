@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Reporte de errores del lado del cliente (browser-only).
+ * PRODE.WAZ — Reporte de errores del lado del cliente (browser-only).
  *
  * Dedup por sesión: cada error se manda UNA vez por carga de página (un loop de
  * render que tira 1000 errores → 1 solo POST). Filtra ruido antes de enviar.

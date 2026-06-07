@@ -64,7 +64,7 @@ export async function createSupportTicketAction(input: unknown): Promise<CreateT
   }
 
   const mail = await sendSupportEmail({
-    subject: `[O2 PRODE] ${ticketNumber} · ${parsed.data.severity.toUpperCase()} · ${parsed.data.title}`,
+    subject: `[PRODE.WAZ] ${ticketNumber} · ${parsed.data.severity.toUpperCase()} · ${parsed.data.title}`,
     lines: [
       `Ticket: ${ticketNumber}`,
       `Severidad: ${parsed.data.severity}`,

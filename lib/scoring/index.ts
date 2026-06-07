@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Scoring · Public API
+ * PRODE.WAZ — Scoring · Public API
  * Agente 9 · Game Logic
  */
 

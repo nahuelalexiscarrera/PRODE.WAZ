@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Supabase browser client
+ * PRODE.WAZ — Supabase browser client
  * For use in Client Components only.
  */
 

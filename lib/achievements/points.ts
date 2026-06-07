@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Puntos efectivos de logros.
+ * PRODE.WAZ — Puntos efectivos de logros.
  *
  * Los puntos bonus de cada logro los puede editar el admin desde el panel
  * (tabla achievement_catalog.points_bonus). El awarding (processAchievements y

@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Motion Variants Catalog
+ * PRODE.WAZ — Motion Variants Catalog
  * Agente 6 · Motion Designer
  *
  * Source of truth for all Framer Motion variants used in the product.

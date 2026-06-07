@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPostDetail, getMyReactionsForPosts, getMyReactionsForComments } from "@/lib/social/queries";
-import { getIsAdmin } from "@/lib/users/queries";
+import { getCanModerate } from "@/lib/users/queries";
 import { timeAgo } from "@/lib/social/feed";
 import { ScreenHeader } from "@/components/features/ScreenHeader";
 import { PostCardFull } from "@/components/features/PostCardFull";
@@ -31,7 +31,7 @@ export default async function PostDetailPage({ params }: Props) {
   const [postReacted, commentReacted, isAdmin] = await Promise.all([
     getMyReactionsForPosts([postId]),
     getMyReactionsForComments(commentIds),
-    getIsAdmin(),
+    getCanModerate(),
   ]);
 
   const now = new Date();

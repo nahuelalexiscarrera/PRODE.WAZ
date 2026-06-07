@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Supabase server client
+ * PRODE.WAZ — Supabase server client
  * For use in Server Components, Route Handlers and Server Actions.
  */
 

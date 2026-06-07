@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import { signInAction, type ActionResult } from "@/lib/auth/actions";
+import { useBrand } from "@/components/providers/BrandProvider";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
@@ -48,38 +49,61 @@ function SubmitButton() {
   );
 }
 
+/** Barra de marca: wordmark "PRODE.<marca>" (o logo subido) + badge con la
+ *  sigla de la marca. Lee la marca activa de useBrand() (la resuelve el layout
+ *  de (auth) por ?brand=<slug> / cookie / default WAZ). */
+function BrandBar() {
+  const brand = useBrand();
+  const name = brand?.name ?? "WAZ";
+  const badge = (brand?.shortName ?? name).slice(0, 3).toUpperCase();
+  const logoUrl = brand?.logoUrl ?? null;
+
+  return (
+    <div className="flex items-center justify-between">
+      {logoUrl ? (
+        <Image
+          src={logoUrl}
+          alt={`${name} logo`}
+          width={120}
+          height={36}
+          unoptimized={logoUrl.startsWith("http")}
+          className="h-9 w-auto object-contain"
+        />
+      ) : (
+        <span className="font-display text-heading-md uppercase tracking-[0.04em] leading-none text-text">
+          PRODE<span className="text-primary">.{name}</span>
+        </span>
+      )}
+      <span className="flex items-center justify-center min-w-10 h-10 px-2 rounded-xl bg-primary-bg border border-primary/30">
+        <span className="font-display text-heading-sm text-primary leading-none">{badge}</span>
+      </span>
+    </div>
+  );
+}
+
 export default function LoginPage() {
+  const brand = useBrand();
   const [showPassword, setShowPassword] = useState(false);
   const [state, formAction] = useFormState<ActionResult | null, FormData>(signInAction, null);
   const errorField = state && !state.ok ? state.field : undefined;
+  const hashtag = "#WAZEXPERIENCE";
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] pb-10">
-      {/* Logo real O2 Wellness Club */}
-      <div className="flex justify-center pt-2">
-        <Image
-          src="/logo.png"
-          alt="O2 Wellness Club"
-          width={150}
-          height={150}
-          priority
-          className="h-36 w-36 object-contain select-none"
-        />
-      </div>
+      <BrandBar />
 
-      {/* Aire */}
-      <div className="flex-1 min-h-[6vh]" />
-
-      {/* Título editorial */}
-      <header className="mb-6">
-        <h1 className="font-display uppercase leading-[0.85] text-text">
-          <span className="block text-[1.75rem] tracking-[0.10em]">Prode</span>
-          <span className="block text-[3.5rem] tracking-[0.01em] text-primary">Mundial</span>
+      {/* Hero editorial */}
+      <header className="mt-10">
+        <h1 className="font-display uppercase leading-[0.82] text-text">
+          <span className="block text-[1.5rem] tracking-[0.18em] text-text-muted">Predecí</span>
+          <span className="block text-[4rem] tracking-[0.01em] text-primary">Mundial</span>
+          <span className="block text-[1.5rem] tracking-[0.42em] text-text-muted mt-1">2 0 2 6</span>
         </h1>
-        <p className="mt-4 text-body-md text-text-secondary text-balance text-center">
-          Cada partido suma. Cada acierto te acerca al podio.
-        </p>
       </header>
+
+      <div className="flex-1 min-h-[4vh]" />
+
+      <div className="border-t border-border mb-7" />
 
       <Suspense fallback={null}>
         <ConfirmBanner />
@@ -121,7 +145,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        <div className="text-right -mt-2">
+        <div className="text-right -mt-1">
           <Link href="/forgot" className="text-body-sm text-primary hover:underline">
             ¿Olvidaste tu contraseña?
           </Link>
@@ -139,9 +163,7 @@ export default function LoginPage() {
             Registrate
           </Link>
         </p>
-        <p className="mt-4 text-[10px] uppercase tracking-[0.28em] text-text-disabled">
-          #WazeExperience
-        </p>
+        <p className="mt-5 text-[10px] uppercase tracking-[0.28em] text-text-disabled">{hashtag}</p>
       </footer>
     </div>
   );

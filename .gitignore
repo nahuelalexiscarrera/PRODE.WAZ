@@ -71,5 +71,9 @@ data/seed/beta-testers.json
 *.pem
 .cache/
 
+# Design reference (downloaded design kit, not app source)
+Prode Design System/
+_internal/
+
 .vercel
 .env*

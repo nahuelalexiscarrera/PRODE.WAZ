@@ -27,9 +27,16 @@ export default function ForgotPage() {
       return;
     }
 
+    // La URL base viene de NEXT_PUBLIC_APP_URL (env de producción) o del origin
+    // del browser como fallback. El redirectTo DEBE pasar por /auth/confirm para
+    // que el token sea intercambiado y la sesión de recovery quede activa — sin
+    // eso, resetPasswordAction no tiene sesión y falla con "link vencido".
+    // Supabase también requiere que esta URL esté en el allowlist de Redirect URLs
+    // del proyecto (Auth → URL Configuration en el dashboard).
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${appUrl}/auth/confirm?next=/reset-password`,
     });
 
     if (error) {

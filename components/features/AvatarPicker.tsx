@@ -15,32 +15,32 @@ interface AvatarPickerProps {
 }
 
 const AVATAR_URLS = [
-  "/avatares_O2/screen.webp",
-  "/avatares_O2/screen 2.webp",
-  "/avatares_O2/screen 3.webp",
-  "/avatares_O2/screen 4.webp",
-  "/avatares_O2/screen 5.webp",
-  "/avatares_O2/screen 6.webp",
-  "/avatares_O2/screen 7.webp",
-  "/avatares_O2/screen 8.webp",
-  "/avatares_O2/screen 9.webp",
-  "/avatares_O2/screen 10.webp",
-  "/avatares_O2/screen 11.webp",
-  "/avatares_O2/screen 12.webp",
-  "/avatares_O2/screen 13.webp",
-  "/avatares_O2/screen 14.webp",
-  "/avatares_O2/screen 15.webp",
-  "/avatares_O2/screen 16.webp",
-  "/avatares_O2/screen 17.webp",
-  "/avatares_O2/screen 18.webp",
-  "/avatares_O2/screen 19.webp",
-  "/avatares_O2/screen 20.webp",
-  "/avatares_O2/screen 21.webp",
-  "/avatares_O2/screen 22.webp"
+  "/avatares/screen.webp",
+  "/avatares/screen 2.webp",
+  "/avatares/screen 3.webp",
+  "/avatares/screen 4.webp",
+  "/avatares/screen 5.webp",
+  "/avatares/screen 6.webp",
+  "/avatares/screen 7.webp",
+  "/avatares/screen 8.webp",
+  "/avatares/screen 9.webp",
+  "/avatares/screen 10.webp",
+  "/avatares/screen 11.webp",
+  "/avatares/screen 12.webp",
+  "/avatares/screen 13.webp",
+  "/avatares/screen 14.webp",
+  "/avatares/screen 15.webp",
+  "/avatares/screen 16.webp",
+  "/avatares/screen 17.webp",
+  "/avatares/screen 18.webp",
+  "/avatares/screen 19.webp",
+  "/avatares/screen 20.webp",
+  "/avatares/screen 21.webp",
+  "/avatares/screen 22.webp"
 ];
 
 export function AvatarPicker({ currentAvatarUrl, open, onClose }: AvatarPickerProps) {
-  const initialSelection = currentAvatarUrl?.startsWith("/avatares_O2/") 
+  const initialSelection = currentAvatarUrl?.startsWith("/avatares/")
     ? currentAvatarUrl 
     : AVATAR_URLS[0];
     

@@ -1,12 +1,16 @@
 /**
- * O2 PRODE — Levels (1-5)
+ * Levels (1-5)
  * Agente 11 · Gamification
  *
  * Level system with UI metadata. Pure logic lives in lib/ranking/compute.ts
  * (pointsToLevel). This module adds display helpers: color, glow, etc.
+ *
+ * Multi-marca: el nombre del nivel 5 lleva el sufijo de la marca activa
+ * ("Leyenda O2", "Leyenda FitClub", etc.). Los nombres en `LEVELS` son los
+ * canónicos sin marca; usa `displayLevelName(meta, brand)` para renderizar.
  */
 
-import type { UserLevel } from "@/types/domain";
+import type { BrandContext, UserLevel } from "@/types/domain";
 
 export interface LevelMeta {
   level: UserLevel;
@@ -29,12 +33,22 @@ export const LEVELS: readonly LevelMeta[] = [
   { level: 4, name: "Crack", thresholdPoints: 301, color: "var(--accent-lime)", withGlow: false },
   {
     level: 5,
-    name: "Leyenda O2",
+    name: "Leyenda",
     thresholdPoints: 501,
     color: "var(--accent-lime)",
     withGlow: true,
   },
 ] as const;
+
+/** Render-friendly del nombre del nivel para la marca activa.
+ *  Niveles 1–4 mantienen su nombre canónico; el 5 se concatena con la marca. */
+export function displayLevelName(meta: LevelMeta, brand?: BrandContext | null): string {
+  if (meta.level === 5) {
+    const brandName = brand?.name ?? "WAZ";
+    return `${meta.name} ${brandName}`;
+  }
+  return meta.name;
+}
 
 export function getLevelMeta(level: UserLevel): LevelMeta {
   // Levels are 1-indexed; we know LEVELS has exactly 5 entries.

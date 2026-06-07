@@ -1,38 +1,23 @@
 /**
- * POST /api/cron/refresh-views
+ * POST /api/cron/refresh-views — DEPRECATED, no-op.
  *
- * Refresca las materialized views mv_user_summary y mv_ranking_global.
- * Ejecutado cada 5 minutos vía Vercel Cron.
- * Protegido por Authorization: Bearer <CRON_SECRET>.
+ * Las materialized views mv_user_summary y mv_ranking_global fueron eliminadas
+ * en 20260607_multi_brand.sql y reemplazadas por funciones parametrizadas
+ * (fn_user_summary_for_brand, fn_ranking_for_brand). Este endpoint ya no hace
+ * nada. Fue removido de vercel.json; se mantiene el archivo para no generar
+ * un 404 si algún client lo llama directamente.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
+const BODY = {
+  ok: true,
+  deprecated:
+    "mv_user_summary y mv_ranking_global fueron eliminadas en la migración multi-marca. Endpoint no-op.",
+};
 
-async function handle(req: NextRequest) {
-  if (!authOk(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("fn_refresh_views");
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true, refreshed: ["mv_user_summary", "mv_ranking_global"] });
-}
-
-// Vercel Cron dispara GET; mantenemos POST para invocación manual.
-export const GET = handle;
-export const POST = handle;
+export const GET = (_req: NextRequest) => NextResponse.json(BODY);
+export const POST = (_req: NextRequest) => NextResponse.json(BODY);

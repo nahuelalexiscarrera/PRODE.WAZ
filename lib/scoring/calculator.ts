@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Match Points Calculator (pure function)
+ * PRODE.WAZ — Match Points Calculator (pure function)
  * Agente 9 · Game Logic
  *
  * Calculates the score for a single match prediction.

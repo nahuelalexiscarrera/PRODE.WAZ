@@ -1,4 +1,4 @@
-# O2 PRODE — Accessibility Audit Report
+# PRODE.WAZ — Accessibility Audit Report
 
 **Agente 12 · Accessibility Auditor**
 Versión 1.0 · 2026-05-19

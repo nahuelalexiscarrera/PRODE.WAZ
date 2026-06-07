@@ -151,4 +151,3 @@ Checklist completo en [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md).
 ---
 
 *Mundial 2026 · KaiStudio*
-# PRODE.WAZ

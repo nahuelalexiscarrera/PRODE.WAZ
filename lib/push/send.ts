@@ -13,7 +13,7 @@ function ensureVapid(): boolean {
     return false;
   }
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT ?? "mailto:contacto@o2-prode.app",
+    process.env.VAPID_SUBJECT ?? "mailto:contacto@prode-waz.app",
     pub,
     priv,
   );

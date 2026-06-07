@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Feed helpers (pure functions)
+ * PRODE.WAZ — Feed helpers (pure functions)
  * Agente 10 · Social Feed
  *
  * Pure helpers for feed display: relative time, body truncation,

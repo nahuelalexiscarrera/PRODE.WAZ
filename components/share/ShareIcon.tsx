@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Iconos inline para share cards (Satori / @vercel/og)
+ * PRODE.WAZ — Iconos inline para share cards (Satori / @vercel/og)
  *
  * Satori NO soporta <use href="sprite#id"> de un sprite externo, así que para
  * las share PNG inyectamos el path real del sprite (design/icons.svg) inline.

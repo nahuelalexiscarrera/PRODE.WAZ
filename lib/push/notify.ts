@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Web Push fan-out helpers
+ * PRODE.WAZ — Web Push fan-out helpers
  *
  * Envío de notificaciones push respetando las preferencias del socio. Toda la
  * lógica es defensiva: si algo falla (VAPID sin configurar, error de red, etc.)

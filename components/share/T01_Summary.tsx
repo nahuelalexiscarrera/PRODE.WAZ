@@ -1,16 +1,32 @@
-import type { SummaryShareData, ShareFormat } from "@/lib/share/templates";
+import {
+  DEFAULT_SHARE_BRAND,
+  type BrandShareContext,
+  type SummaryShareData,
+  type ShareFormat,
+} from "@/lib/share/templates";
 
-const C = {
+const STATIC = {
   bg: "#0a0608",
-  primary: "#FF6A00",
-  lime: "#D9FF3F",
   gold: "#FFB300",
   celeste: "#74ACDF",
   muted: "#888888",
   text: "#FFFFFF",
 };
 
-export function T01_Summary({ data, format }: { data: SummaryShareData; format: ShareFormat }) {
+export function T01_Summary({
+  data,
+  format,
+  brand = DEFAULT_SHARE_BRAND,
+}: {
+  data: SummaryShareData;
+  format: ShareFormat;
+  brand?: BrandShareContext;
+}) {
+  const C = {
+    ...STATIC,
+    primary: brand.primary,
+    lime: brand.accent,
+  };
   const h = format === "story" ? 1920 : 1080;
   const accent = data.isArgentinaChampion ? C.celeste : C.gold;
 
@@ -36,7 +52,7 @@ export function T01_Summary({ data, format }: { data: SummaryShareData; format: 
           width: 700,
           height: 700,
           borderRadius: "50%",
-          background: `radial-gradient(ellipse at center, rgba(255,106,0,0.18) 0%, transparent 70%)`,
+          background: `radial-gradient(ellipse at center, rgba(${brand.primaryRGB},0.18) 0%, transparent 70%)`,
           display: "flex",
         }}
       />
@@ -67,10 +83,10 @@ export function T01_Summary({ data, format }: { data: SummaryShareData; format: 
               fontFamily: "Anton",
               color: C.primary,
               letterSpacing: "0.04em",
-              textShadow: `0 0 32px rgba(255,106,0,0.6)`,
+              textShadow: `0 0 32px rgba(${brand.primaryRGB},0.6)`,
             }}
           >
-            O2
+            {brand.name}
           </span>
         </div>
 
@@ -116,7 +132,12 @@ export function T01_Summary({ data, format }: { data: SummaryShareData; format: 
 
           {/* Stats */}
           <div style={{ display: "flex", gap: 48 }}>
-            <StatBlock label="PUNTOS" value={String(data.points)} accent={C.lime} />
+            <StatBlock
+              label="PUNTOS"
+              value={String(data.points)}
+              accent={C.lime}
+              glow={`0 0 48px rgba(${brand.primaryRGB},0.4)`}
+            />
             <StatBlock label="NIVEL" value={data.userLevelName.toUpperCase()} accent={C.text} large={false} />
           </div>
         </div>
@@ -124,7 +145,7 @@ export function T01_Summary({ data, format }: { data: SummaryShareData; format: 
         {/* Footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 48 }}>
           <span style={{ fontSize: 28, letterSpacing: "0.14em", color: C.gold, fontWeight: 700 }}>
-            #PRODEMUNDIALO2
+            {`#PRODEMUNDIAL${brand.hashtagSuffix}`}
           </span>
           <span style={{ fontSize: 28, color: C.muted }}>— {data.userName.split(" ")[0]}</span>
         </div>
@@ -151,11 +172,13 @@ function StatBlock({
   value,
   accent,
   large = true,
+  glow,
 }: {
   label: string;
   value: string;
   accent: string;
   large?: boolean;
+  glow?: string;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -168,7 +191,7 @@ function StatBlock({
           fontSize: large ? 120 : 64,
           color: accent,
           lineHeight: 1,
-          textShadow: accent === "#D9FF3F" ? `0 0 48px rgba(217,255,63,0.4)` : undefined,
+          textShadow: glow,
         }}
       >
         {value}

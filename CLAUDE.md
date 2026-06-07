@@ -1,4 +1,4 @@
-# O2 PRODE — Repo Constitution
+# PRODE.WAZ — Repo Constitution
 
 **Propósito:** Este archivo orienta a Claude Code (y a cualquier desarrollador que se sume) sobre el proyecto. Es la "constitución" del repo: reglas duras, decisiones ya cerradas, dónde está cada cosa. **Si una decisión está acá, no se re-discute** — se lee, se respeta.
 
@@ -6,9 +6,11 @@
 
 ## 1. Qué es esto
 
-**O2 PRODE.** App web mobile-first para que los ~800 socios del gimnasio **O2** compitan prediciendo los partidos del **Mundial 2026**. No es betting, no es fantasy genérico. Es un asset de marca del club + retención de socios + viralidad orgánica.
+**PRODE.WAZ.** Plataforma web mobile-first donde múltiples marcas (gimnasios, clubs, comunidades) hostean su propio prode del **Mundial 2026**. Nació como app de un solo gimnasio (**O2 Wellness Club**, ~800 socios — hoy la marca seed/tenant original) y se evolucionó a plataforma **multi-tenant user-bound**: cada `user.brand_id` ancla la marca, todas comparten infra (mismo código, Supabase, Vercel) pero tienen rankings/usuarios/branding aislados.
 
-Estado actual: **diseño y arquitectura cerrados. Scaffold de Next.js ejecutable. Falta el desarrollo de pantallas + features.**
+No es betting, no es fantasy genérico. Cada marca usa el prode como asset de retención + viralidad orgánica.
+
+Estado actual: **multi-marca implementado (migración `supabase/migrations/20260607_multi_brand.sql`). O2 sigue siendo la marca seed y funciona idéntico. Para crear más marcas todavía no hay UI de Super Admin — se hace via SQL directo o seeds. Pantallas + features siguen evolucionando.**
 
 ---
 
@@ -32,13 +34,13 @@ Estas son **hard rules**. No se ignoran.
 
 1. **Cero emojis Unicode** en el producto (🇦🇷🏆🔒💬 etc). Iconografía 100% custom desde `design/icons.svg`. Si un componente necesita un símbolo visual, se usa `<Icon name="..."/>` desde el sprite. Banderas también — son SVG inline, no emoji.
 
-2. **Branding: solo "O2"**. C2 aparecía en mockups originales como placeholder; está descartado. Socios = "Socio O2". Hashtag = `#PRODEMUNDIALO2`. Nivel top = "Leyenda O2".
+2. **Branding por marca activa.** La marca se resuelve via `getCurrentBrand()` en server components y `useBrand()` en client (de `lib/brands/queries.ts` y `components/providers/BrandProvider.tsx`). **Cero strings hardcoded de marca** en componentes — todo va por `brand.name`, `brand.logoUrl`, `brand.hashtagSuffix`, `brand.subBrand`, o por placeholder (`{brandName}`, `{hashtagSuffix}`, `{subBrand}`) en `lib/i18n/es-AR.json` resuelto con `resolveCopy()` de `lib/i18n/resolve.ts`. C2 fue descartado en el rebranding original; la marca seed es "O2".
 
 3. **Idioma único: español rioplatense (es-AR)**. Voseo siempre (`cargá`, `tenés`, `podés`). Todo copy vive en `lib/i18n/es-AR.json`. Sin i18n routing.
 
 4. **Mobile-first PWA.** Container max-width 480px en todos los breakpoints. No hay versión desktop nativa separada.
 
-5. **Solo dark mode** en MVP. Sin tema claro.
+5. **Dark mode único** por ahora. La regla original ("solo dark mode") se atenuó con la migración multi-marca: el sistema de temas (tabla `theme`, campo `tokens` JSONB) ya permite definir esquemas de color por marca. Light mode sigue sin implementarse — cada tema actualmente define paletas dark. Habilitar light requiere extender `themeToCssVars` (en `lib/brands/theme.ts`) para emitir el par claro/oscuro y un toggle de usuario.
 
 6. **Match cards de knockout: abreviación FIFA 3 letras** (ARG, MEX, BRA, SEN...). Tabla en `lib/i18n/es-AR.json` bajo `teamCodes`. Nombre completo solo en fase de grupos y share card.
 
@@ -215,7 +217,11 @@ Detalle completo en `docs/15_final_checkpoint.md` §8. Resumen:
 - ❌ Crear nuevos modales que no implementen focus trap + Escape close + return focus.
 - ❌ Hardcodear nombres del país en componentes. Importar de `i18n.teamCodes` o `data/seed/teams.json`.
 - ❌ Postergar tests del scoring engine. Es el corazón de la confianza del usuario.
-- ❌ Mencionar "C2" en ningún lado. La marca es **O2**.
+- ❌ Hardcodear strings de marca ("O2", "#PRODEMUNDIALO2", "Wellness Club", "Leyenda O2") en componentes. Todo viene de `useBrand()` (client) / `getCurrentBrand()` (server) o de placeholders en `lib/i18n/es-AR.json` resueltos con `resolveCopy()`.
+- ❌ Filtrar queries user-data sin `brand_id`. Aunque RLS bloquea cross-brand, las queries deben tener el filtro explícito (`.eq("brand_id", brand.id)`) — deja la intención clara y no depende solo de policy.
+- ❌ Llamar `fn_recalculate_positions()` sin argumento. Es per-marca ahora: `fn_recalculate_positions(p_brand_id UUID)`. Si querés recalc global usá `fn_recalculate_positions_all()`.
+- ❌ Asumir que `position` es global. Cada marca tiene su propio `#1`. El ranking compuesto cross-brand no existe.
+- ❌ Mencionar "C2" en ningún lado.
 
 ---
 

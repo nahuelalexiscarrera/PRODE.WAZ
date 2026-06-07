@@ -1,4 +1,4 @@
-# O2 PRODE — Mobile UI Designs
+# PRODE.WAZ — Mobile UI Designs
 
 **Agente 4 · Mobile UI Designer**
 Versión 1.0 · 2026-05-18
@@ -123,7 +123,7 @@ Viewport baseline: 390 × 844 (iPhone 14 Pro). Mínimo soportado: 360 × 640. Co
 ┌──────────────────────────────┐
 │ ← [back]                     │
 │                              │
-│ HACETE SOCIO O2 PRODE        │  ← display.md
+│ HACETE SOCIO PRODE.WAZ        │  ← display.md
 │                              │
 │ El acceso es solo para       │  ← body.md secondary
 │ socios del gimnasio.         │

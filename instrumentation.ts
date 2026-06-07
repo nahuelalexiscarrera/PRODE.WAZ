@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Next.js instrumentation.
+ * PRODE.WAZ — Next.js instrumentation.
  *
  * onRequestError es el hook oficial de Next 15 para capturar errores
  * server-side (RSC, route handlers, server actions) de forma central. Lo

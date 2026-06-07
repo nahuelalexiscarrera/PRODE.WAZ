@@ -3,8 +3,15 @@ name: Sync results (Mundial 2026)
 # Resultados en vivo: dispara /api/cron/sync-results cada 30 min.
 # Vercel plan Hobby NO permite crons sub-diarios, así que lo corre GitHub Actions
 # y pega al endpoint protegido (Bearer CRON_SECRET). Los crons DIARIOS
-# (refresh-views, daily-streaks, weekly-positions, weekly-digest) siguen en
-# vercel.json. Cuando termine el Mundial, se puede desactivar este workflow.
+# (daily-streaks, weekly-positions, weekly-digest) siguen en vercel.json.
+# Cuando termine el Mundial, se puede desactivar este workflow.
+#
+# Secrets necesarios en el repo (Settings → Secrets and variables → Actions):
+#   CRON_SECRET  — igual al de .env.local / Vercel env vars
+#
+# Variables necesarias en el repo (Settings → Secrets and variables → Actions):
+#   APP_URL      — URL raíz de producción sin trailing slash
+#                  Ej: https://prode-waz.vercel.app
 
 on:
   schedule:
@@ -23,14 +30,19 @@ jobs:
       - name: Trigger /api/cron/sync-results
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
-            echo "Falta el secret CRON_SECRET en el repo (Settings → Secrets → Actions)."
+            echo "::error::Falta el secret CRON_SECRET en Settings → Secrets → Actions."
+            exit 1
+          fi
+          if [ -z "$APP_URL" ]; then
+            echo "::error::Falta la variable APP_URL en Settings → Variables → Actions."
             exit 1
           fi
           code=$(curl -sS -o /tmp/out.txt -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $CRON_SECRET" \
-            https://o2-prode.vercel.app/api/cron/sync-results)
+            "${APP_URL}/api/cron/sync-results")
           echo "HTTP $code"
           cat /tmp/out.txt || true
           echo ""

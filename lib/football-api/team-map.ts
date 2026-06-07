@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — football-data.org · mapeos
+ * PRODE.WAZ — football-data.org · mapeos
  *
  * football-data.org identifica equipos por TLA (tricódigo FIFA: MEX, BRA…).
  * Nuestra DB usa ISO alpha-2 (mx, br…). Verificado contra los 48 del Mundial 2026.

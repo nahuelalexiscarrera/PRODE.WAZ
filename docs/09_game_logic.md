@@ -1,4 +1,4 @@
-# O2 PRODE — Game Logic Engine
+# PRODE.WAZ — Game Logic Engine
 
 **Agente 9 · Game Logic**
 Versión 1.0 · 2026-05-18

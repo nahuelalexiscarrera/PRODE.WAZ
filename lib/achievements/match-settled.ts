@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Evaluación de logros tras el cierre de partidos (scope match-settled).
+ * PRODE.WAZ — Evaluación de logros tras el cierre de partidos (scope match-settled).
  *
  * El scoring lo hace el trigger de Postgres (fn_settle_match) al marcar el match
  * 'finished'. Pero los logros de SKILL (A01-A05) y de POSICIÓN (P01-P03/P05) viven

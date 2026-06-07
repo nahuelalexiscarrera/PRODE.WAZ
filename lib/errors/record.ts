@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Auto-captura de errores (server-only, core)
+ * PRODE.WAZ — Auto-captura de errores (server-only, core)
  *
  * Anti-sobrecarga (3 capas):
  *  1. Filtro de ruido: errores transitorios/de extensiones se descartan.
@@ -104,7 +104,7 @@ export async function recordError(r: ErrorReport): Promise<void> {
     if ((count ?? 0) >= EMAIL_BUDGET) return; // se registró igual, sin mail
 
     const mail = await sendSupportEmail({
-      subject: `[O2 PRODE][AUTO][${r.kind}] ${message}`.slice(0, 200),
+      subject: `[PRODE.WAZ][AUTO][${r.kind}] ${message}`.slice(0, 200),
       lines: [
         `Tipo: ${r.kind === "server" ? "Servidor" : "Cliente"}`,
         `Ruta: ${route ?? "—"}`,

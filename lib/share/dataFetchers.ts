@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Share Data Fetchers (edge-compatible)
+ * PRODE.WAZ — Share Data Fetchers (edge-compatible)
  * Fetches only what each template needs, using the admin client.
  */
 
@@ -28,10 +28,14 @@ async function fetchUserCore(userId: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("user")
-    .select("name, initials, level, total_points, position")
+    .select("name, initials, level, total_points, position, visibility, brand_id")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
   if (!data) return null;
+  // Privacidad (C8): el endpoint /api/share es PÚBLICO (viral). Solo generamos
+  // la card de usuarios con visibility='public'. Un usuario private no es
+  // compartible por terceros → cierra la enumeración de datos cross-marca.
+  if ((data.visibility as string | null) !== "public") return null;
   const level = Number(data.level ?? 1) as UserLevel;
   return {
     userId,
@@ -41,6 +45,7 @@ async function fetchUserCore(userId: string) {
     userLevelName: getLevelMeta(level).name,
     totalPoints: data.total_points as number,
     position: data.position as number,
+    brandId: data.brand_id as string,
   };
 }
 
@@ -104,9 +109,13 @@ export async function fetchShareData(
   }
 
   if (template === "position") {
+    // C1: contar socios SOLO de la marca del usuario (no el total global de
+    // todas las marcas). Antes inflaba el denominador ("5 de 5000" global).
     const { count: totalSocios } = await supabase
       .from("user")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("brand_id", user.brandId)
+      .is("deleted_at", null);
 
     const positionData: PositionShareData = {
       template: "position",
@@ -130,18 +139,26 @@ export async function fetchShareData(
     const { data: match } = await supabase
       .from("match")
       .select(
-        "id, phase, group_id, home_code, away_code, kickoff_at, home_team:team!home_code(code,name), away_team:team!away_code(code,name)"
+        "id, phase, group_id, home_code, away_code, kickoff_at, status, home_team:team!home_code(code,name), away_team:team!away_code(code,name)"
       )
       .eq("id", contextId)
-      .single();
+      .maybeSingle();
+
+    if (!match) return null;
+
+    // Integridad (C8): la predicción de un partido solo se revela cuando YA cerró
+    // (1h antes del kickoff = lock). Antes, exponerla en la share card permitía
+    // copiar el pronóstico de otro socio. Tras el cierre todas están fijas → ok.
+    const kickoffMs = new Date(match.kickoff_at as string).getTime();
+    const predictionsLocked =
+      (match.status as string) !== "scheduled" || Date.now() >= kickoffMs - 3_600_000;
+    if (!predictionsLocked) return null;
 
     const { data: prediction } = await supabase
       .from("prediction")
       .select("home_score, away_score")
       .match({ user_id: userId, match_id: contextId })
       .maybeSingle();
-
-    if (!match) return null;
 
     const homeTeam = (match.home_team as unknown as TeamRow | null);
     const awayTeam = (match.away_team as unknown as TeamRow | null);

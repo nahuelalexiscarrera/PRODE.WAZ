@@ -1,4 +1,4 @@
-# O2 PRODE — Deploy Checklist
+# PRODE.WAZ — Deploy Checklist
 
 **Agente 14 · QA & Performance**
 Pre-release sign-off para producción. Cada item debe estar ✅ antes de anunciar el lanzamiento al gym.

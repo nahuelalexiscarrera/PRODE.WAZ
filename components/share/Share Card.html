@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViralShare — Share Card</title>
+
+  <!-- Barlow Condensed: athletic, condensed, Nike/Strava-adjacent -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; min-height: 100vh;
+      overflow-x: hidden; overflow-y: auto;
+      background: #121212;
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+
+    #root {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 20px;
+    }
+
+    .card-stage {
+      transform-origin: top center;
+    }
+
+    /* ── GLOW BREATHE ANIMATION ─────────────────────────── */
+    @keyframes glowBreathe {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.04); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TWEAKS PANEL ───────────────────────────────────── */
+    .twk-panel {
+      position: fixed; top: 20px; right: 20px;
+      width: 216px;
+      background: #141414;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 18px 16px;
+      z-index: 1000;
+      animation: fadeUp 0.2s ease;
+    }
+    .twk-title {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.24em; color: #FF6A00;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .twk-label {
+      display: block; font-size: 9px; font-weight: 600;
+      letter-spacing: 0.2em; color: rgba(255,255,255,0.3);
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .twk-field {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 5px;
+      padding: 6px 8px;
+      color: #fff; font-size: 13px;
+      font-family: 'Barlow Condensed', sans-serif;
+      outline: none; margin-bottom: 11px;
+      -webkit-appearance: none; appearance: none;
+      transition: border-color 0.15s;
+    }
+    .twk-field:focus { border-color: rgba(255,106,0,0.45); }
+    .twk-field:last-child { margin-bottom: 0; }
+    .twk-divider {
+      height: 1px; background: rgba(255,255,255,0.06);
+      margin: 10px 0 11px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKEN SYSTEM — multi-brand ready
+       Swap `accent` + `brandName` per brand instance
+    ═══════════════════════════════════════════════════════ */
+    const BASE_TOKENS = {
+      bg:           '#080808',
+      accent:       '#FF6A00',
+      accentRGB:    '255,106,0',
+      white:        '#FFFFFF',
+      textDim:      'rgba(255,255,255,0.42)',
+      textGhost:    'rgba(255,255,255,0.18)',
+      borderFaint:  'rgba(255,255,255,0.07)',
+      borderAccent: 'rgba(255,106,0,0.35)',
+      font:         "'Barlow Condensed', 'Arial Narrow', sans-serif",
+      padH: 32,
+      padVTop: 36,
+      padVBot: 28,
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       BRAND SYSTEM — swap accent + bg per brand
+    ═══════════════════════════════════════════════════════ */
+    const BRANDS = {
+      O2:    { label: 'O2',    accent: '#FF6A00', accentRGB: '255,106,0',   bg: '#080808' },
+      STORM: { label: 'STORM', accent: '#2B7FFF', accentRGB: '43,127,255',  bg: '#05080F' },
+      APEX:  { label: 'APEX',  accent: '#C0C0C0', accentRGB: '192,192,192', bg: '#040404' },
+      VERDE: { label: 'VERDE', accent: '#00D97E', accentRGB: '0,217,126',   bg: '#030E08' },
+    };
+
+    /* Rank → adaptive number font-size */
+    function numFontSize(rankStr) {
+      const d = rankStr.length;
+      return d === 1 ? 268 : d === 2 ? 206 : 162;
+    }
+
+    /* Name length → adaptive name font-size (empirically safe for Barlow Condensed 900) */
+    function nameFontSize(name) {
+      const l = name.length;
+      return l <= 3 ? 96 : l <= 4 ? 88 : l <= 5 ? 80 : l <= 6 ? 70 : l <= 7 ? 62 : l <= 8 ? 56 : l <= 10 ? 48 : 40;
+    }
+
+    /* Rank → glow intensity (calibrated: present but not blinding) */
+    function glowIntensity(rankNum) {
+      if (rankNum === 1)  return 0.24;
+      if (rankNum <= 3)   return 0.17;
+      if (rankNum <= 5)   return 0.11;
+      return 0.07;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SHARE CARD COMPONENT
+    ═══════════════════════════════════════════════════════ */
+    function ShareCard({ rank, name, status, percentile, points, totalSocios, semana, brandName, brandKey }) {
+      const brand  = BRANDS[brandKey] || BRANDS.O2;
+      const T      = {
+        ...BASE_TOKENS,
+        bg:           brand.bg,
+        accent:       brand.accent,
+        accentRGB:    brand.accentRGB,
+        borderAccent: `rgba(${brand.accentRGB},0.30)`,
+      };
+      const rStr   = String(rank);
+      const rNum   = parseInt(rStr) || 1;
+      const nSize  = numFontSize(rStr);
+      const hSize  = Math.round(nSize * 0.295);   // hash "#" size
+      const hTop   = Math.round(nSize * 0.155);   // hash top-offset
+      const nmSize = nameFontSize(name);
+      const g      = glowIntensity(rNum);
+      const aRGB   = T.accentRGB;
+
+      return (
+        <div style={{
+          width: 390, height: 693,
+          background: T.bg,
+          fontFamily: T.font,
+          position: 'relative', overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          padding: `${T.padVTop}px ${T.padH}px ${T.padVBot}px`,
+          boxShadow: '0 40px 100px rgba(0,0,0,0.7)',
+        }}>
+
+          {/* ── AMBIENT GLOW — the aura behind the number ─ */}
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 0,
+            background: `radial-gradient(ellipse 70% 52% at 50% 39%, rgba(${aRGB},${(g*0.09).toFixed(2)}) 0%, transparent 68%)`,
+            mixBlendMode: 'screen',
+            animation: 'glowBreathe 5s ease-in-out infinite',
+            pointerEvents: 'none',
+          }} />
+
+          {/* ── TOP BAR ─────────────────────────────────── */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <span style={{
+              fontSize: 10, fontWeight: 500,
+              letterSpacing: '0.26em', color: T.textGhost,
+              textTransform: 'uppercase', lineHeight: 1,
+              whiteSpace: 'nowrap',
+            }}>MI POSICIÓN</span>
+
+            <span style={{
+              fontSize: 10, fontWeight: 500,
+              letterSpacing: '0.2em', color: 'rgba(255,255,255,0.13)',
+              textTransform: 'uppercase', lineHeight: 1,
+              whiteSpace: 'nowrap',
+            }}>SEMANA {semana}</span>
+          </div>
+
+          {/* ── HERO ────────────────────────────────────── */}
+          <div style={{
+            flex: 1, position: 'relative', zIndex: 1,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            marginTop: -18,   /* optical upward bias */
+          }}>
+
+            {/* ▸ THE RANKING NUMBER — the entire message */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start',
+              lineHeight: 1,
+            }}>
+              <span style={{
+                fontSize: hSize, fontWeight: 900,
+                color: T.accent, lineHeight: 1,
+                marginTop: hTop,
+                opacity: 0.72,
+                letterSpacing: '-0.01em',
+                userSelect: 'none',
+              }}>#</span>
+
+              <span style={{
+                fontSize: nSize, fontWeight: 900,
+                color: T.accent,
+                lineHeight: 0.86,
+                letterSpacing: '-0.04em',
+                userSelect: 'none',
+                textShadow: [
+                  `0 0 35px  rgba(${aRGB},${g.toFixed(2)})`,
+                  `0 0 70px  rgba(${aRGB},${(g*0.40).toFixed(2)})`,
+                  `0 0 130px rgba(${aRGB},${(g*0.14).toFixed(2)})`,
+                ].join(', '),
+              }}>{rStr}</span>
+            </div>
+
+            {/* ▸ USER NAME */}
+            <div style={{
+              fontSize: nmSize, fontWeight: 900,
+              color: T.white,
+              letterSpacing: '0.035em',
+              lineHeight: 0.88,
+              marginTop: -4,
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              width: '100%',
+              whiteSpace: 'nowrap',
+            }}>{name}</div>
+
+            {/* ▸ HAIRLINE — precision mark */}
+            <div style={{
+              width: 30, height: 1.5,
+              background: T.borderAccent,
+              margin: '17px auto 15px',
+            }} />
+
+            {/* ▸ STATUS BADGE */}
+            <div style={{
+              border: `1px solid ${T.borderAccent}`,
+              borderRadius: 2,
+              padding: '5px 16px',
+              fontSize: 11.5, fontWeight: 700,
+              letterSpacing: '0.22em',
+              color: T.accent,
+              textTransform: 'uppercase',
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap',
+            }}>{status}</div>
+
+            {/* ▸ PERCENTILE — the emotional trigger */}
+            <div style={{ marginTop: 26, textAlign: 'center' }}>
+              <div style={{
+                fontSize: 19, fontWeight: 700,
+                letterSpacing: '0.1em',
+                color: 'rgba(255,255,255,0.9)',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+                whiteSpace: 'nowrap',
+              }}>
+                SUPERÓ AL{' '}
+                <span style={{ color: T.accent }}>{percentile}%</span>
+              </div>
+              <div style={{
+                fontSize: 11, fontWeight: 500,
+                letterSpacing: '0.18em',
+                color: T.textDim,
+                textTransform: 'uppercase',
+                marginTop: 6, lineHeight: 1,
+                whiteSpace: 'nowrap',
+              }}>DE LOS PARTICIPANTES</div>
+            </div>
+
+            {/* ▸ META — minimum context */}
+            <div style={{
+              marginTop: 20,
+              fontSize: 10, fontWeight: 500,
+              letterSpacing: '0.2em',
+              color: 'rgba(255,255,255,0.22)',
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+            }}>{totalSocios} SOCIOS · {points} PTS</div>
+
+          </div>
+
+          {/* ── FOOTER ──────────────────────────────────── */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            borderTop: `1px solid ${T.borderFaint}`,
+            paddingTop: 14,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <span style={{
+              fontSize: 10, fontWeight: 600,
+              letterSpacing: '0.1em',
+              color: 'rgba(255,255,255,0.22)',
+              lineHeight: 1,
+            }}>#WAZEXPERIENCE</span>
+
+            {/* Brand logo slot — swap per brand */}
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'flex-end', gap: 1,
+            }}>
+              <span style={{
+                fontSize: 23, fontWeight: 900,
+                color: T.accent,
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}>{brandName}</span>
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TWEAKS PANEL
+    ═══════════════════════════════════════════════════════ */
+    function TweaksPanel({ vals, set, visible }) {
+      if (!visible) return null;
+      const F = ({ label, children }) => (
+        <div>
+          <label className="twk-label">{label}</label>
+          {children}
+        </div>
+      );
+      const Sel = ({ k, opts }) => (
+        <select className="twk-field" value={vals[k]}
+          onChange={e => set(k, e.target.value)}>
+          {opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+        </select>
+      );
+      const Inp = ({ k, max, type='text' }) => (
+        <input className="twk-field" type={type} value={vals[k]}
+          onChange={e => {
+            let v = e.target.value;
+            if (type === 'text') v = v.toUpperCase().slice(0, max || 99);
+            set(k, v);
+          }} />
+      );
+
+      return (
+        <div className="twk-panel">
+          <div className="twk-title" style={{ color: (BRANDS[vals.brandKey] || BRANDS.O2).accent }}>Tweaks</div>
+
+          <F label="Posición">
+            <Sel k="rank" opts={[1,2,3,4,5,6,7,8,10,12,15,20].map(n=>({v:String(n),l:`#${n}`}))} />
+          </F>
+
+          <F label="Nombre">
+            <Inp k="name" max={12} />
+          </F>
+
+          <F label="Status">
+            <Sel k="status" opts={[
+              'ELITE ATHLETE','PRO ATHLETE','LEGEND','CHALLENGER','ROOKIE'
+            ].map(s=>({v:s,l:s}))} />
+          </F>
+
+          <div className="twk-divider" />
+
+          <F label="% Superado">
+            <Sel k="percentile" opts={['99','97','95','92','90','85','80','75','50'].map(p=>({v:p,l:`${p}%`}))} />
+          </F>
+
+          <F label="Puntos">
+            <Inp k="points" type="number" />
+          </F>
+
+          <F label="Socios">
+            <Inp k="totalSocios" type="number" />
+          </F>
+
+          <div className="twk-divider" />
+
+          <F label="Semana">
+            <Sel k="semana" opts={[1,2,3,4,5,6,7,8].map(s=>({v:String(s),l:`Semana ${s}`}))} />
+          </F>
+
+          <div className="twk-divider" />
+
+          <label className="twk-label">Marca</label>
+          <div style={{ display: 'flex', gap: 5, marginBottom: 11 }}>
+            {Object.entries(BRANDS).map(([key, brand]) => (
+              <button key={key}
+                onClick={() => { set('brandKey', key); set('brandName', brand.label); }}
+                style={{
+                  flex: 1, padding: '7px 2px',
+                  background: vals.brandKey === key ? brand.accent : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${vals.brandKey === key ? brand.accent : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 4, cursor: 'pointer',
+                  fontSize: 8, fontWeight: 800, letterSpacing: '0.08em',
+                  color: vals.brandKey === key ? '#000' : 'rgba(255,255,255,0.35)',
+                  fontFamily: 'inherit', textTransform: 'uppercase',
+                  transition: 'all 0.15s',
+                }}>{brand.label}</button>
+            ))}
+          </div>
+
+          <F label="Logo texto">
+            <Inp k="brandName" max={8} />
+          </F>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       APP
+    ═══════════════════════════════════════════════════════ */
+    function App() {
+      const [vals, setVals] = useState({
+        rank: '2',
+        name: 'NAHUEL',
+        status: 'ELITE ATHLETE',
+        percentile: '90',
+        points: '5',
+        totalSocios: '21',
+        semana: '1',
+        brandName: 'O2',
+        brandKey:  'O2',
+      });
+      const [tweaksVisible, setTweaksVisible] = useState(false);
+
+      useEffect(() => {
+        const h = e => {
+          if (e.data?.type === 'tweaks-panel-toggle') {
+            setTweaksVisible(e.data.visible);
+          }
+        };
+        window.addEventListener('message', h);
+        return () => window.removeEventListener('message', h);
+      }, []);
+
+      const set = (k, v) => setVals(p => ({ ...p, [k]: v }));
+      const currentBrand = BRANDS[vals.brandKey] || BRANDS.O2;
+
+      const [scale, setScale] = useState(1);
+
+      useEffect(() => {
+        function updateScale() {
+          const sw = window.innerWidth;
+          // Scale based on width only — never upscale, always readable
+          const s = Math.min(1.0, (sw - 40) / 390);
+          setScale(Math.max(0.5, s));
+        }
+        updateScale();
+        window.addEventListener('resize', updateScale);
+        return () => window.removeEventListener('resize', updateScale);
+      }, []);
+
+      return (
+        <>
+          <div className="card-stage" style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
+            marginBottom: `${(693 * scale) - 693}px`,  // compensate layout for scaled height
+          }}>
+            <ShareCard {...vals} />
+          </div>
+          <TweaksPanel vals={vals} set={set} visible={tweaksVisible} />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

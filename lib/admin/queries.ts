@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Métricas de admin.
+ * PRODE.WAZ — Métricas de admin.
  *
  * Conteos agregados de toda la base. Usa el cliente service-role para obtener
  * totales reales (no limitados por RLS). SOLO llamar desde una página ya

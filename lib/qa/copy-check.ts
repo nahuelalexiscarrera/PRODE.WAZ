@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — i18n Coverage Validator
+ * PRODE.WAZ — i18n Coverage Validator
  * Agente 14 · QA & Performance
  *
  * Validates that:
@@ -98,7 +98,7 @@ export function checkCopyCoverage(opts: CheckOptions = {}): CheckResult {
 /** Standalone CLI entry point. */
 if (typeof require !== "undefined" && require.main === module) {
   const result = checkCopyCoverage({ strict: true });
-  console.log(`\nO2 PRODE — i18n Coverage Report`);
+  console.log(`\nPRODE.WAZ — i18n Coverage Report`);
   console.log(`Total keys in JSON:       ${result.totalKeys}`);
   console.log(`Total keys referenced:    ${result.totalReferenced}`);
   console.log(`Missing in JSON:          ${result.missingKeys.length}`);

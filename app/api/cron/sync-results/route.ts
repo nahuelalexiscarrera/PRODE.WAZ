@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Cron: sync-results (football-data.org)
+ * PRODE.WAZ — Cron: sync-results (football-data.org)
  *
  * GET/POST /api/cron/sync-results · Bearer CRON_SECRET
  *
@@ -41,7 +41,7 @@ type DbMatch = {
 
 interface SyncChange {
   fdId: number;
-  action: "created" | "set_live" | "set_finished" | "set_postponed" | "linked";
+  action: "created" | "set_live" | "set_finished" | "set_postponed" | "linked" | "rescored";
   detail?: string;
 }
 
@@ -83,6 +83,13 @@ async function handle(req: NextRequest) {
   const changes: SyncChange[] = [];
   const finishedNotifs: Array<{ homeCode: string; awayCode: string; h: number; a: number }> = [];
   const finishedMatchIds: string[] = [];
+  // API2: nada se descarta en silencio. Cada skip/error queda visible en logs y
+  // en la respuesta del cron, para detectar TLA sin mapeo, resultados sin score, etc.
+  const skipped: Array<{ reason: string; detail: string }> = [];
+  const warn = (reason: string, detail: string) => {
+    skipped.push({ reason, detail });
+    console.warn(`[sync-results] ${reason}: ${detail}`);
+  };
 
   for (const fx of fixtures) {
     const homeTla = fx.homeTeam?.tla;
@@ -91,7 +98,10 @@ async function handle(req: NextRequest) {
 
     const homeCode = TLA_TO_CODE[homeTla];
     const awayCode = TLA_TO_CODE[awayTla];
-    if (!homeCode || !awayCode) continue;
+    if (!homeCode || !awayCode) {
+      warn("tla-sin-mapeo", `${homeTla}/${awayTla} (fd_id ${fx.id}) — falta en TLA_TO_CODE; el partido NO se sincroniza`);
+      continue;
+    }
 
     const phase = stageToPhase(fx.stage);
     const status = fdStatusToMatch(fx.status);
@@ -102,7 +112,10 @@ async function handle(req: NextRequest) {
 
     if (!db) {
       // Cruce nuevo (eliminatorias recién definidas) → crear
-      if (!tournamentId) continue;
+      if (!tournamentId) {
+        warn("sin-torneo", `no hay tournament para crear ${homeCode} vs ${awayCode} (${phase})`);
+        continue;
+      }
       const { data: inserted } = await supabase
         .from("match")
         .insert({
@@ -138,34 +151,69 @@ async function handle(req: NextRequest) {
       changes.push({ fdId: fx.id, action: "set_postponed" });
     }
 
-    // ── Finalizado ──
-    if (status === "finished" && db.status !== "finished") {
+    // ── Finalizado (primer cierre) o corrección de un resultado ya finalizado ──
+    if (status === "finished") {
       const gh = fx.score?.fullTime?.home;
       const ga = fx.score?.fullTime?.away;
-      if (gh == null || ga == null) continue;
-
-      // Mapear goles al orden home/away de NUESTRA fila (puede estar invertido)
-      let dbHome: number, dbAway: number;
-      if (homeCode === db.home_code) {
-        dbHome = gh;
-        dbAway = ga;
-      } else {
-        dbHome = ga;
-        dbAway = gh;
+      if (gh == null || ga == null) {
+        warn("finished-sin-score", `${homeCode} vs ${awayCode} (fd_id ${fx.id}) llegó finished sin fullTime score`);
+        continue;
       }
 
-      const { error: rErr } = await supabase.from("match_result").upsert(
-        { match_id: db.id, home_score: dbHome, away_score: dbAway, finished_at: new Date().toISOString() },
-        { onConflict: "match_id" }
-      );
-      if (rErr) continue;
+      // Mapear goles al orden home/away de NUESTRA fila (puede estar invertido)
+      const dbHome = homeCode === db.home_code ? gh : ga;
+      const dbAway = homeCode === db.home_code ? ga : gh;
 
-      // Marcar finished dispara fn_settle_match (puntúa + recalcula ranking)
-      const { error: mErr } = await supabase.from("match").update({ status: "finished" }).eq("id", db.id);
-      if (!mErr) {
+      if (db.status !== "finished") {
+        // Primer cierre: graba resultado y marca finished → dispara fn_settle_match.
+        const { error: rErr } = await supabase.from("match_result").upsert(
+          { match_id: db.id, home_score: dbHome, away_score: dbAway, finished_at: new Date().toISOString() },
+          { onConflict: "match_id" }
+        );
+        if (rErr) {
+          warn("match_result-error", `${db.id}: ${rErr.message}`);
+          continue;
+        }
+        const { error: mErr } = await supabase.from("match").update({ status: "finished" }).eq("id", db.id);
+        if (mErr) {
+          warn("match-finished-error", `${db.id}: ${mErr.message}`);
+          continue;
+        }
         changes.push({ fdId: fx.id, action: "set_finished", detail: `${db.home_code} ${dbHome}-${dbAway} ${db.away_code}` });
         finishedNotifs.push({ homeCode: db.home_code, awayCode: db.away_code, h: dbHome, a: dbAway });
         finishedMatchIds.push(db.id);
+      } else {
+        // API1: ya estaba finished. Si el resultado CAMBIÓ (corrección VAR / dato
+        // tardío), regraba el resultado y RE-PUNTÚA: fn_resettle_match revierte
+        // los puntos viejos y recalcula sobre el nuevo score (antes quedaba viejo).
+        const { data: prev } = await supabase
+          .from("match_result")
+          .select("home_score, away_score")
+          .eq("match_id", db.id)
+          .maybeSingle();
+        const changedScore =
+          prev != null && (prev.home_score !== dbHome || prev.away_score !== dbAway);
+        if (changedScore) {
+          const { error: rErr } = await supabase.from("match_result").upsert(
+            { match_id: db.id, home_score: dbHome, away_score: dbAway, finished_at: new Date().toISOString() },
+            { onConflict: "match_id" }
+          );
+          if (rErr) {
+            warn("rescore-error", `${db.id}: ${rErr.message}`);
+            continue;
+          }
+          const { error: reErr } = await supabase.rpc("fn_resettle_match", { p_match_id: db.id });
+          if (reErr) {
+            warn("resettle-error", `${db.id}: ${reErr.message}`);
+            continue;
+          }
+          changes.push({
+            fdId: fx.id,
+            action: "rescored",
+            detail: `${db.home_code} ${prev.home_score}-${prev.away_score} → ${dbHome}-${dbAway}`,
+          });
+          finishedMatchIds.push(db.id); // re-evaluar logros con el nuevo resultado
+        }
       }
     }
   }
@@ -188,13 +236,20 @@ async function handle(req: NextRequest) {
     if (userIds.length > 0) await evaluateMatchSettledForUsers(userIds);
   }
 
-  return NextResponse.json({ ok: true, processed: fixtures.length, changes: changes.length, detail: changes });
+  return NextResponse.json({
+    ok: true,
+    processed: fixtures.length,
+    changes: changes.length,
+    detail: changes,
+    skipped: skipped.length,
+    skippedDetail: skipped,
+  });
 }
 
 // ─── Notificaciones ───────────────────────────────────────────────────
 
 async function sendMatchResultNotifications(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: helper interno; recibe el admin client de Supabase
   supabase: any,
   homeCode: string,
   awayCode: string,
@@ -225,7 +280,7 @@ async function sendMatchResultNotifications(
 }
 
 async function sendUpcomingMatchNotifications(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: helper interno; recibe el admin client de Supabase
   supabase: any
 ) {
   const now = new Date();

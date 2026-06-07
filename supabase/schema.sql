@@ -1,5 +1,5 @@
 -- ┌────────────────────────────────────────────────────────────────┐
--- │  O2 PRODE — Supabase Schema                                    │
+-- │  PRODE.WAZ — Supabase Schema                                    │
 -- │  Agente 8 · Data Modeler · 2026-05-18                          │
 -- │  PostgreSQL 15+ · Row-Level Security activado                  │
 -- └────────────────────────────────────────────────────────────────┘
@@ -642,3 +642,78 @@ CREATE INDEX idx_mv_ranking_global_pos ON mv_ranking_global(position);
 -- Refresh manual (Agente 9 llama tras fn_settle_match)
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY mv_user_summary;
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY mv_ranking_global;
+
+-- ┌─────────────────────────────────────────────────────────────────┐
+-- │  Multi-Brand (2026-06-07)                                       │
+-- │                                                                 │
+-- │  La migración 20260607_multi_brand.sql evoluciona este schema   │
+-- │  para soportar N marcas:                                        │
+-- │                                                                 │
+-- │  TABLAS NUEVAS:                                                 │
+-- │    theme        - catálogo de tokens visuales (slug PK)         │
+-- │    brand        - marca activa (slug UNIQUE, theme_slug FK)     │
+-- │    brand_admin  - N:M brand ↔ user                              │
+-- │                                                                 │
+-- │  ENUMS NUEVOS:                                                  │
+-- │    brand_status_t  - 'active' | 'inactive'                      │
+-- │    user_role_t     - 'member' | 'brand_admin' | 'super_admin'   │
+-- │                                                                 │
+-- │  COLUMNAS AGREGADAS:                                            │
+-- │    user(brand_id NOT NULL, role NOT NULL DEFAULT 'member')      │
+-- │    prediction(brand_id NOT NULL)                                │
+-- │    special_prediction(brand_id NOT NULL)                        │
+-- │    post(brand_id NOT NULL)                                      │
+-- │    ranking_snapshot(brand_id NOT NULL)                          │
+-- │                                                                 │
+-- │  FUNCIONES REESCRITAS (operan por marca, no globales):          │
+-- │    fn_recalculate_positions(p_brand_id UUID)                    │
+-- │    fn_recalculate_positions_all()  -- itera por todas activas   │
+-- │    fn_settle_match(p_match_id)  -- resuelve brands afectadas    │
+-- │    fn_add_points(p_user_id, p_delta)  -- usa user.brand_id      │
+-- │                                                                 │
+-- │  HELPERS NUEVOS:                                                │
+-- │    current_brand_id()  -- brand_id del usuario auth             │
+-- │    is_super_admin()    -- role = 'super_admin'                  │
+-- │    is_brand_admin(p_brand_id)                                   │
+-- │    is_admin()  -- ahora cubre super_admin Y brand_admin         │
+-- │                                                                 │
+-- │  MVs ELIMINADAS, reemplazadas por funciones parametrizadas:     │
+-- │    mv_user_summary  → fn_user_summary_for_brand(p_brand_id)     │
+-- │    mv_ranking_global → fn_ranking_for_brand(p_brand_id, p_limit)│
+-- │                                                                 │
+-- │  RLS: las policies de tablas user-data filtran por marca via    │
+-- │  current_brand_id(); super_admin ve todo.                       │
+-- │                                                                 │
+-- │  Ver supabase/migrations/20260607_multi_brand.sql para el DDL   │
+-- │  completo y el backfill que mueve a O2 todos los users actuales.│
+-- └─────────────────────────────────────────────────────────────────┘
+
+-- ┌─────────────────────────────────────────────────────────────────┐
+-- │  Super Admin (2026-06-08)                                       │
+-- │                                                                 │
+-- │  20260608_super_admin.sql agrega:                              │
+-- │    - Los 10 temas reales del design system en `theme`           │
+-- │      (o2, carbon, rosso, alpine, volt, teal, stealth, papaya,   │
+-- │       titanium, midnight); dropea los placeholders de 20260607. │
+-- │    - Storage bucket `brand-logos` (público) + policies: lectura │
+-- │      pública, escritura/borrado solo is_super_admin().          │
+-- │    - Tabla `brand_admin_invite` (brand_id, email, consumed_at): │
+-- │      asignar admins por email antes de que existan; se          │
+-- │      reconcilia en app/auth/confirm al registrarse.             │
+-- └─────────────────────────────────────────────────────────────────┘
+
+-- ┌─────────────────────────────────────────────────────────────────┐
+-- │  Hardening de aislamiento (2026-06-09)                         │
+-- │                                                                 │
+-- │  20260609_brand_isolation_hardening.sql cierra agujeros de      │
+-- │  WRITE/lectura cross-brand que 20260607 no cubrió:              │
+-- │    - Moderación de post/comment scopeada con is_brand_admin()   │
+-- │      (un brand_admin solo modera SU marca).                     │
+-- │    - WITH CHECK de prediction/special_prediction fuerza         │
+-- │      brand_id = current_brand_id() (anti-spoof de marca).       │
+-- │    - INSERT de comment exige post de la marca del actor.        │
+-- │    - SELECT de comment/reaction scopeado por marca.             │
+-- │    - reaction: FOR ALL → DELETE (propias) + INSERT (en marca).  │
+-- │    - fn_ranking_for_brand ordena por puntos (ROW_NUMBER).       │
+-- │    - Logos SVG fuera del bucket (anti-XSS).                     │
+-- └─────────────────────────────────────────────────────────────────┘

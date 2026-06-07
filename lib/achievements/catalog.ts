@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Achievement Catalog
+ * PRODE.WAZ — Achievement Catalog
  * Agente 11 · Gamification
  *
  * Source of truth for the 19 achievements available in MVP.

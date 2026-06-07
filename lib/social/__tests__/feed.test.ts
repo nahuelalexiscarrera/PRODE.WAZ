@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * O2 PRODE — Feed Helpers · Test Suite
+ * PRODE.WAZ — Feed Helpers · Test Suite
  *
  * Pure functions only — no network, no DB.
  */
@@ -128,6 +128,7 @@ function makePost(id: string, createdAt: string): Post {
   return {
     id,
     userId: "u1",
+    brandId: "brand-fixture",
     body: "texto",
     imageUrl: null,
     imageWidth: null,

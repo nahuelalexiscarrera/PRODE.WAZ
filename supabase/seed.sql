@@ -1,5 +1,5 @@
 -- =====================================================================
--- O2 PRODE — Seed Data — Mundial 2026 (placeholder)
+-- PRODE.WAZ — Seed Data — Mundial 2026 (placeholder)
 -- Ejecutar una vez vía Supabase CLI: supabase db seed
 -- O pegar en el SQL editor del dashboard de Supabase
 --

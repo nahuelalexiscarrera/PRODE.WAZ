@@ -1,9 +1,13 @@
-import type { AchievementShareData, ShareFormat } from "@/lib/share/templates";
+import {
+  DEFAULT_SHARE_BRAND,
+  type AchievementShareData,
+  type BrandShareContext,
+  type ShareFormat,
+} from "@/lib/share/templates";
 import { ShareIcon } from "./ShareIcon";
 
-const C = {
+const STATIC_C = {
   bg: "#0a0a0c",
-  lime: "#D9FF3F",
   gold: "#FFB300",
   muted: "#888888",
   text: "#FFFFFF",
@@ -16,13 +20,25 @@ const CAT_LABELS: Record<string, string> = {
   position: "POSICIÓN",
 };
 
+// rgba util — compone canal de color desde un RGB string (e.g. "217,255,63").
+function rgba(rgb: string, alpha: number): string {
+  return `rgba(${rgb},${alpha})`;
+}
+
 export function T04_Achievement({
   data,
   format,
+  brand = DEFAULT_SHARE_BRAND,
 }: {
   data: AchievementShareData;
   format: ShareFormat;
+  brand?: BrandShareContext;
 }) {
+  const C = {
+    ...STATIC_C,
+    lime: brand.accent,
+    primary: brand.primary,
+  };
   const h = format === "story" ? 1920 : 1080;
   const circleSize = format === "story" ? 480 : 360;
   const catLabel = CAT_LABELS[data.achievementCategory] ?? data.achievementCategory.toUpperCase();
@@ -34,12 +50,12 @@ export function T04_Achievement({
         flexDirection: "column",
         width: 1080,
         height: h,
-        background: `linear-gradient(180deg, ${C.bg} 0%, #0e1206 60%, ${C.bg} 100%)`,
+        background: `linear-gradient(180deg, ${C.bg} 0%, ${rgba(brand.accentRGB, 0.06)} 60%, ${C.bg} 100%)`,
         fontFamily: "Inter",
         padding: 0,
       }}
     >
-      {/* Lime spotlight */}
+      {/* Accent spotlight — usa el color de accent de la marca */}
       <div
         style={{
           position: "absolute",
@@ -49,7 +65,7 @@ export function T04_Achievement({
           width: 800,
           height: 800,
           borderRadius: "50%",
-          background: `radial-gradient(circle at center, rgba(217,255,63,0.18) 0%, transparent 70%)`,
+          background: `radial-gradient(circle at center, ${rgba(brand.accentRGB, 0.18)} 0%, transparent 70%)`,
           display: "flex",
         }}
       />
@@ -64,11 +80,11 @@ export function T04_Achievement({
             style={{
               fontSize: 64,
               fontFamily: "Anton",
-              color: "#FF6A00",
-              textShadow: `0 0 32px rgba(255,106,0,0.6)`,
+              color: C.primary,
+              textShadow: `0 0 32px ${rgba(brand.primaryRGB, 0.6)}`,
             }}
           >
-            O2
+            {brand.name}
           </span>
         </div>
 
@@ -81,8 +97,8 @@ export function T04_Achievement({
             width: circleSize,
             height: circleSize,
             borderRadius: "50%",
-            background: `radial-gradient(circle at center, rgba(217,255,63,0.22) 0%, transparent 70%)`,
-            border: `2px solid rgba(217,255,63,0.4)`,
+            background: `radial-gradient(circle at center, ${rgba(brand.accentRGB, 0.22)} 0%, transparent 70%)`,
+            border: `2px solid ${rgba(brand.accentRGB, 0.4)}`,
             alignSelf: "center",
             marginBottom: 48,
           }}
@@ -109,7 +125,7 @@ export function T04_Achievement({
               fontSize: format === "story" ? 100 : 72,
               color: C.lime,
               lineHeight: 1,
-              textShadow: `0 0 40px rgba(217,255,63,0.4)`,
+              textShadow: `0 0 40px ${rgba(brand.accentRGB, 0.4)}`,
             }}
           >
             {data.achievementName}
@@ -130,7 +146,7 @@ export function T04_Achievement({
         {/* Footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <span style={{ fontSize: 28, letterSpacing: "0.14em", color: C.gold, fontWeight: 700 }}>
-            #PRODEMUNDIALO2
+            {`#PRODEMUNDIAL${brand.hashtagSuffix}`}
           </span>
           <span style={{ fontSize: 24, color: C.muted }}>{data.userName.split(" ")[0]}</span>
         </div>

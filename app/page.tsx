@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Root page
+ * PRODE.WAZ — Root page
  * Agente 7 · Next.js Architect
  *
  * Middleware redirects unauthenticated users to /login.

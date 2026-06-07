@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Root Layout
+ * PRODE.WAZ — Root Layout
  * Agente 7 · Next.js Architect
  *
  * Loads Anton + Inter via next/font (no Google Fonts runtime requests).
@@ -27,14 +27,17 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+// PRODE.WAZ es la PLATAFORMA. El metadata a nivel root usa el nombre de la
+// plataforma; cada (app) route puede sobrescribir generateMetadata para mostrar
+// la marca-tenant del socio (logo/nombre) cuando haya sesión.
 export const metadata: Metadata = {
   title: {
-    default: "O2 PRODE — Mundial 2026",
-    template: "%s · O2 PRODE",
+    default: "PRODE.WAZ — Mundial 2026",
+    template: "%s · PRODE.WAZ",
   },
   description:
-    "Competí con tus compañeros del gimnasio O2. Predecí los partidos del Mundial 2026 y demostrá que sabés de fútbol.",
-  applicationName: "O2 PRODE",
+    "Competí con tu comunidad y demostrá que sabés de fútbol. El prode del Mundial 2026.",
+  applicationName: "PRODE.WAZ",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -46,15 +49,15 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "O2 PRODE",
+    title: "PRODE.WAZ",
     statusBarStyle: "black-translucent",
   },
   openGraph: {
     type: "website",
     locale: "es_AR",
-    title: "O2 PRODE — Mundial 2026",
-    description: "El prode del gimnasio O2 para el Mundial 2026.",
-    siteName: "O2 PRODE",
+    title: "PRODE.WAZ — Mundial 2026",
+    description: "El prode del Mundial 2026 para tu comunidad.",
+    siteName: "PRODE.WAZ",
   },
   formatDetection: {
     telephone: false,

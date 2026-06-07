@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Achievement Trigger Engine
+ * PRODE.WAZ — Achievement Trigger Engine
  * Agente 11 · Gamification
  *
  * Pure evaluators per achievement. Given a TriggerContext, each returns

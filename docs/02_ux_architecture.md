@@ -1,4 +1,4 @@
-# O2 PRODE — Arquitectura UX
+# PRODE.WAZ — Arquitectura UX
 
 **Agente 2 · UX Architect**
 Versión 1.0 · 2026-05-18
@@ -23,7 +23,7 @@ La app se organiza en **5 dominios de información** que mapean 1:1 con los 5 í
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       O2 PRODE                              │
+│                       PRODE.WAZ                              │
 ├──────────┬───────────┬───────────┬───────────┬─────────────┤
 │  Inicio  │   Prode   │  Ranking  │   Muro    │   Perfil    │
 ├──────────┼───────────┼───────────┼───────────┼─────────────┤

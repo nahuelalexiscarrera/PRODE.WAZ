@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Share System · TypeScript Interfaces
+ * PRODE.WAZ — Share System · TypeScript Interfaces
  * Agente 5 · Viral Share Designer
  *
  * Data shapes for each share template. Consumed by:
@@ -12,6 +12,36 @@
 export type ShareTemplateId = "summary" | "position" | "match" | "achievement";
 
 export type ShareFormat = "story" | "square";
+
+/** Datos de marca que las templates necesitan para pintar branding correcto.
+ *  Resuelto server-side por el endpoint a partir del user_id. Defaults =
+ *  fallback a WAZ si la query no encuentra la marca (caso edge). */
+export interface BrandShareContext {
+  /** Color hex primario, e.g. "#FF6A00". */
+  primary: string;
+  /** RGB literal sin espacios, e.g. "255,106,0" — para rgba() inline. */
+  primaryRGB: string;
+  /** Accent color hex, e.g. "#D9FF3F". */
+  accent: string;
+  /** RGB del accent, e.g. "217,255,63" — para rgba() inline en glows y overlays. */
+  accentRGB: string;
+  /** Nombre corto a renderizar en la esquina superior derecha (e.g. "WAZ"). */
+  name: string;
+  /** Sufijo del hashtag (e.g. "WAZ" → "#PRODEMUNDIALWAZ"). */
+  hashtagSuffix: string;
+  /** URL absoluta del logo. Puede ser http(s) o ruta absoluta del mismo origin. */
+  logoUrl: string;
+}
+
+export const DEFAULT_SHARE_BRAND: BrandShareContext = {
+  primary: "#FF6A00",
+  primaryRGB: "255,106,0",
+  accent: "#D9FF3F",
+  accentRGB: "217,255,63",
+  name: "WAZ",
+  hashtagSuffix: "WAZ",
+  logoUrl: "/logo.png",
+};
 
 export type AchievementCategory = "skill" | "consistency" | "social" | "position";
 

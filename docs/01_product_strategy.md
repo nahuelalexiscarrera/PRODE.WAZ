@@ -1,4 +1,4 @@
-# O2 PRODE — Documento de Estrategia de Producto
+# PRODE.WAZ — Documento de Estrategia de Producto
 
 **Agente 1 · Product Strategist**
 Versión 1.0 · 2026-05-18
@@ -9,7 +9,7 @@ Horizonte: Mundial 2026 (11 jun – 19 jul 2026)
 
 ## 1. Resumen Ejecutivo
 
-O2 PRODE es una **plataforma social de predicción de partidos del Mundial 2026** diseñada exclusivamente para socios del gimnasio O2 Wellness Club. No es un producto de apuestas ni un fantasy genérico: es una **mecánica de pertenencia** que convierte el Mundial en el catalizador para profundizar el vínculo entre socios, transformar la comunidad del gimnasio en un grupo social activo dentro y fuera del salón de entrenamiento, y generar contenido viral orgánico que actúe como marketing del gimnasio.
+PRODE.WAZ es una **plataforma social de predicción de partidos del Mundial 2026** diseñada exclusivamente para socios del gimnasio O2 Wellness Club. No es un producto de apuestas ni un fantasy genérico: es una **mecánica de pertenencia** que convierte el Mundial en el catalizador para profundizar el vínculo entre socios, transformar la comunidad del gimnasio en un grupo social activo dentro y fuera del salón de entrenamiento, y generar contenido viral orgánico que actúe como marketing del gimnasio.
 
 El producto se sostiene sobre tres pilares: **competencia sana** (ranking, predicciones, puntos), **identidad de comunidad** (muro social interno, logros visibles, pertenencia al club) y **shareability viral** (cada acción genera artefactos visuales premium listos para Stories y WhatsApp con branding sutil de O2).
 
@@ -135,7 +135,7 @@ Implicaciones de diseño que se derivan:
                         ALTA personalización social
                                   │
                                   │
-            Mister/Biwenger ●     │      ● O2 PRODE (objetivo)
+            Mister/Biwenger ●     │      ● PRODE.WAZ (objetivo)
                                   │
    ──────────────────────────────┼──────────────────────────────
    Masivo/genérico                │                     De nicho/club

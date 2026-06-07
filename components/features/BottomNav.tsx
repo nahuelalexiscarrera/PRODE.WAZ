@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — BottomNav
+ * PRODE.WAZ — BottomNav
  * Spec: Agente 3 §10.10, Agente 4 §4.1
  *
  * 5 tabs persistentes en (app) routes. Glass surface.

@@ -1,11 +1,11 @@
 /**
- * O2 PRODE — Envío de email de soporte (server-only)
+ * PRODE.WAZ — Envío de email de soporte (server-only)
  *
  * Usa Resend (https://resend.com) — mucho más simple que Jira: 1 sola API key.
  * Env vars:
  *   RESEND_API_KEY     = la API key de Resend (resend.com/api-keys)
  *   SUPPORT_EMAIL_TO   = destino (default kaistudio.designcraft@gmail.com)
- *   SUPPORT_EMAIL_FROM = remitente (default O2 PRODE <onboarding@resend.dev>)
+ *   SUPPORT_EMAIL_FROM = remitente (default PRODE.WAZ <onboarding@resend.dev>)
  *
  * Con el dominio compartido onboarding@resend.dev se puede enviar al MISMO email
  * de la cuenta Resend sin verificar dominio → arranca sin fricción.
@@ -14,7 +14,7 @@
 
 const KEY = process.env.RESEND_API_KEY;
 const TO = process.env.SUPPORT_EMAIL_TO || "kaistudio.designcraft@gmail.com";
-const FROM = process.env.SUPPORT_EMAIL_FROM || "O2 PRODE <onboarding@resend.dev>";
+const FROM = process.env.SUPPORT_EMAIL_FROM || "PRODE.WAZ <onboarding@resend.dev>";
 
 export function isEmailConfigured(): boolean {
   return Boolean(KEY);

@@ -1,4 +1,4 @@
-# O2 PRODE — Viral Share System
+# PRODE.WAZ — Viral Share System
 
 **Agente 5 · Viral Share Designer**
 Versión 1.0 · 2026-05-18

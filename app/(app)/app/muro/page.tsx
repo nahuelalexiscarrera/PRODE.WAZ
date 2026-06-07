@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getFeedRecientes, getFeedDestacados, getMyReactionsForPosts } from "@/lib/social/queries";
-import { getMyProfile, getIsAdmin } from "@/lib/users/queries";
+import { getMyProfile, getCanModerate } from "@/lib/users/queries";
 import { ScreenHeader } from "@/components/features/ScreenHeader";
 import { WallFeed } from "@/components/features/WallFeed";
 import type { AuthorRow, FeedPost } from "@/lib/social/types";
@@ -26,7 +26,7 @@ export default async function MuroPage({ searchParams }: Props) {
       ? getFeedDestacados(30)
       : getFeedRecientes({ limit: 30 }),
     getMyProfile(),
-    getIsAdmin(),
+    getCanModerate(),
   ]);
 
   const postIds = rawPosts.map((p) => p.id);

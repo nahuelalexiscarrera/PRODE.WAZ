@@ -1,4 +1,4 @@
-# O2 PRODE — Motion System
+# PRODE.WAZ — Motion System
 
 **Agente 6 · Motion Designer**
 Versión 1.0 · 2026-05-18
@@ -14,7 +14,7 @@ Outputs:
 
 > "El movimiento cuenta una historia. Si no cuenta nada, no va."
 
-El sistema de motion de O2 PRODE se rige por **5 reglas no negociables**:
+El sistema de motion de PRODE.WAZ se rige por **5 reglas no negociables**:
 
 1. **Toda animación tiene un significado.** Subiste, ganaste, se desbloqueó, está cargando, está vivo. Si no transmite información, sale.
 2. **Duración proporcional al peso.** Tap = 120ms. Modal = 320ms. Celebración = 800ms. Nunca al revés.

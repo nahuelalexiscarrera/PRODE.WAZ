@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Special Predictions (one-shot pre-torneo)
+ * PRODE.WAZ — Special Predictions (one-shot pre-torneo)
  * Agente 9 · Game Logic
  *
  * Champion, runner-up, top scorer, group-stage best, revelation team.

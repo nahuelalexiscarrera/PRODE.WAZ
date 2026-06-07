@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils/cn";
+import { useBrand } from "@/components/providers/BrandProvider";
 import type { ReactNode } from "react";
 
 interface ScreenHeaderProps {
@@ -15,11 +18,19 @@ interface ScreenHeaderProps {
 /**
  * Header de pantalla — concepto "Pro-Performance Elite".
  *
- * - Top-level (sin backHref): barra de marca "O2 WELLNESS" + acciones a la
- *   derecha, y el título de la pantalla como headline Anton grande debajo.
+ * - Top-level (sin backHref): barra de marca (logo + nombre corto / sub-marca)
+ *   + acciones a la derecha, y el título de la pantalla como headline Anton
+ *   debajo. El branding sale de useBrand() — cero strings hardcoded de "O2".
  * - Sub-pantalla (con backHref): header compacto flecha + título.
  */
 export function ScreenHeader({ title, backHref, className, actions }: ScreenHeaderProps) {
+  const brand = useBrand();
+  // Logo solo si la marca subió uno; si no, va el wordmark "PRODE.<marca>".
+  const logoUrl = brand?.logoUrl ?? null;
+  const brandLabel = brand?.subBrand ?? brand?.shortName ?? brand?.name ?? "";
+  const brandName = brand?.name ?? "WAZ";
+  const logoAlt = brand ? `${brand.name} Logo` : "Logo";
+
   if (backHref) {
     return (
       <header
@@ -48,10 +59,26 @@ export function ScreenHeader({ title, backHref, className, actions }: ScreenHead
       {/* Barra de marca */}
       <div className="flex h-12 items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="O2 Logo" width={26} height={26} className="h-[26px] w-auto object-contain" />
-          <span className="font-display text-heading-md uppercase tracking-[0.06em] leading-none text-text">
-            Wellness Club
-          </span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={logoAlt}
+              width={26}
+              height={26}
+              className="h-[26px] w-auto object-contain"
+              unoptimized={logoUrl.startsWith("http")}
+            />
+          ) : (
+            // Sin logo image: wordmark "PRODE.<marca>" (la marca en color primary).
+            <span className="font-display text-heading-md uppercase tracking-[0.04em] leading-none text-text">
+              PRODE<span className="text-primary">.{brandName}</span>
+            </span>
+          )}
+          {logoUrl && brandLabel && (
+            <span className="font-display text-heading-md uppercase tracking-[0.06em] leading-none text-text">
+              {brandLabel}
+            </span>
+          )}
         </div>
         {actions && <div className="flex items-center gap-1 text-text-muted">{actions}</div>}
       </div>

@@ -51,7 +51,7 @@ function nameColor(name: string): string {
 // Fallback para usuarios con formatos viejos ("art:" o "/avatars/")
 function resolveAvatarUrl(url?: string | null): string | null {
   if (!url) return null;
-  if (url.startsWith("art:") || url.startsWith("/avatars/")) return "/avatares_O2/screen.webp";
+  if (url.startsWith("art:") || url.startsWith("/avatars/")) return "/avatares/screen.webp";
   return url;
 }
 

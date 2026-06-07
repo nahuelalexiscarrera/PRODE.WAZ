@@ -1,29 +1,39 @@
-import type { MatchShareData, ShareFormat } from "@/lib/share/templates";
+import {
+  DEFAULT_SHARE_BRAND,
+  type BrandShareContext,
+  type MatchShareData,
+  type ShareFormat,
+} from "@/lib/share/templates";
 
 /**
  * T03 — "Mi predicción" (viral share). Marcador predicho gigante + glow,
- * equipos, fase, logo O2 y hashtag #WAZEXPERIENCE.
+ * equipos, fase, logo de la marca + hashtag #PRODEMUNDIAL{suffix}.
  */
 
-const C = {
+const STATIC_C = {
   bg: "#080808",
-  accent: "#FF6A00",
-  accentRGB: "255,106,0",
   white: "#FFFFFF",
   dim: "rgba(255,255,255,0.42)",
   ghost: "rgba(255,255,255,0.18)",
-  border: "rgba(255,106,0,0.35)",
 };
 
 export function T03_Match({
   data,
   format,
   origin = "",
+  brand = DEFAULT_SHARE_BRAND,
 }: {
   data: MatchShareData;
   format: ShareFormat;
   origin?: string;
+  brand?: BrandShareContext;
 }) {
+  const C = {
+    ...STATIC_C,
+    accent: brand.primary,
+    accentRGB: brand.primaryRGB,
+    border: `rgba(${brand.primaryRGB},0.35)`,
+  };
   const story = format === "story";
   const H = story ? 1920 : 1080;
   const scoreSize = story ? 460 : 320;
@@ -136,12 +146,17 @@ export function T03_Match({
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 30, letterSpacing: "0.12em", color: C.dim, fontWeight: 700 }}>
-          #WAZEXPERIENCE
+          {`#PRODEMUNDIAL${brand.hashtagSuffix}`}
         </span>
-        {origin ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/logo.png`} width={132} height={120} alt="O2" />
-        ) : null}
+        {(() => {
+          const src = brand.logoUrl.startsWith("http")
+            ? brand.logoUrl
+            : `${origin}${brand.logoUrl}`;
+          return src && origin
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={src} width={132} height={120} alt={brand.name} />
+            : null;
+        })()}
       </div>
     </div>
   );

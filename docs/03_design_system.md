@@ -1,4 +1,4 @@
-# O2 PRODE — Design System
+# PRODE.WAZ — Design System
 
 **Agente 3 · Design System**
 Versión 1.0 · 2026-05-18

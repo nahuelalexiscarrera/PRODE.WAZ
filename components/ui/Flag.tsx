@@ -25,6 +25,9 @@ const AVAILABLE_FLAGS = new Set([
   "us", "py", "au", "tr", "de", "cw", "ci", "ec", "nl", "jp", "se", "tn",
   "be", "eg", "ir", "nz", "es", "cv", "sa", "uy", "fr", "sn", "iq", "no",
   "ar", "dz", "at", "jo", "pt", "cd", "uz", "co", "gb-eng", "hr", "gh", "pa",
+  // Sumadas para los códigos del seed del Mundial 2026 (gb=Inglaterra, ck=Rep.
+  // Checa son alias de gb-eng/cz; el resto son tricolores planos del set).
+  "gb", "ck", "it", "pe", "ng", "pl", "cr", "dk",
 ]);
 
 export function Flag({ code, size = "md", alt, className }: FlagProps) {

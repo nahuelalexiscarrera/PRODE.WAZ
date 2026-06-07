@@ -1,8 +1,11 @@
 import { ScreenHeader } from "@/components/features/ScreenHeader";
+import { getCurrentBrand } from "@/lib/brands/queries";
 
 export const metadata = { title: "Política de privacidad" };
 
-export default function PrivacidadPage() {
+export default async function PrivacidadPage() {
+  const brand = await getCurrentBrand();
+  const brandName = brand?.name ?? "WAZ";
   return (
     <div className="min-h-screen flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom))]">
       <ScreenHeader title="Política de privacidad" backHref="/app/perfil/configuracion" />
@@ -24,7 +27,7 @@ export default function PrivacidadPage() {
             Los datos se utilizan exclusivamente para: mostrar tu posición en el ranking,
             calcular tus puntos, enviarte notificaciones según tus preferencias, y mejorar la
             experiencia de la aplicación. No vendemos ni compartimos datos con terceros fuera
-            del gimnasio O2.
+            de {brandName}.
           </p>
         </section>
 
@@ -50,7 +53,7 @@ export default function PrivacidadPage() {
           <h2 className="font-semibold text-text">5. Retención de datos</h2>
           <p className="text-text-muted">
             Conservamos tus datos mientras tu cuenta esté activa. Podés solicitar la eliminación
-            de tu cuenta y datos asociados en cualquier momento contactando al gimnasio. El
+            de tu cuenta y datos asociados en cualquier momento contactando a {brandName}. El
             historial de predicciones puede conservarse de forma anónima para estadísticas.
           </p>
         </section>
@@ -68,7 +71,7 @@ export default function PrivacidadPage() {
           <h2 className="font-semibold text-text">7. Contacto</h2>
           <p className="text-text-muted">
             Para consultas sobre privacidad o solicitudes de eliminación de datos, contactate
-            en recepción del gimnasio O2 o por los canales de comunicación del club.
+            en recepción de {brandName} o por los canales de comunicación del club.
           </p>
         </section>
 

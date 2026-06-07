@@ -1,30 +1,40 @@
-import type { PositionShareData, ShareFormat } from "@/lib/share/templates";
+import {
+  DEFAULT_SHARE_BRAND,
+  type BrandShareContext,
+  type PositionShareData,
+  type ShareFormat,
+} from "@/lib/share/templates";
 
 /**
  * T02 — "Mi posición" (viral share, estética athletic/Stitch).
- * Número de ranking gigante + glow, percentil ("superó al X%"), logo O2 y
- * hashtag #WAZEXPERIENCE. Story 1080×1920 / square 1080×1080.
+ * Número de ranking gigante + glow, percentil ("superó al X%"), logo de la marca
+ * + hashtag #PRODEMUNDIAL{suffix}. Story 1080×1920 / square 1080×1080.
  */
 
-const C = {
+const STATIC_C = {
   bg: "#080808",
-  accent: "#FF6A00",
-  accentRGB: "255,106,0",
   white: "#FFFFFF",
   dim: "rgba(255,255,255,0.42)",
   ghost: "rgba(255,255,255,0.18)",
-  border: "rgba(255,106,0,0.35)",
 };
 
 export function T02_Position({
   data,
   format,
   origin = "",
+  brand = DEFAULT_SHARE_BRAND,
 }: {
   data: PositionShareData;
   format: ShareFormat;
   origin?: string;
+  brand?: BrandShareContext;
 }) {
+  const C = {
+    ...STATIC_C,
+    accent: brand.primary,
+    accentRGB: brand.primaryRGB,
+    border: `rgba(${brand.primaryRGB},0.35)`,
+  };
   const story = format === "story";
   const H = story ? 1920 : 1080;
   const padH = 96;
@@ -165,12 +175,20 @@ export function T02_Position({
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 30, letterSpacing: "0.12em", color: C.dim, fontWeight: 700 }}>
-          #WAZEXPERIENCE
+          {`#PRODEMUNDIAL${brand.hashtagSuffix}`}
         </span>
-        {origin ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/logo.png`} width={132} height={120} alt="O2" />
-        ) : null}
+        {(() => {
+          // brand.logoUrl puede ser ruta relativa ("/logo.png") o URL absoluta
+          // (Supabase Storage). Satori necesita URL absoluta — prependeamos
+          // origin si es relativa.
+          const src = brand.logoUrl.startsWith("http")
+            ? brand.logoUrl
+            : `${origin}${brand.logoUrl}`;
+          return src && origin
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={src} width={132} height={120} alt={brand.name} />
+            : null;
+        })()}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * O2 PRODE — Scoring Calculator · Test Suite
+ * PRODE.WAZ — Scoring Calculator · Test Suite
  * Agente 9 · Game Logic
  *
  * Vitest. Covers every scoring rule defined in Agente 2 §7.
@@ -395,6 +395,6 @@ describe("Ranking · compute & pointsToLevel", () => {
     expect(pointsToLevel(301).level).toBe(4);
     expect(pointsToLevel(500).level).toBe(4);
     expect(pointsToLevel(501).level).toBe(5);
-    expect(pointsToLevel(501).levelName).toBe("Leyenda O2");
+    expect(pointsToLevel(501).levelName).toBe("Leyenda");
   });
 });

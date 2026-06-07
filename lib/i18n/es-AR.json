@@ -8,11 +8,11 @@
   },
 
   "meta": {
-    "appName": "O2 PRODE",
-    "appTagline": "Competí con tus compañeros del gym. Demostrá que sabés de fútbol.",
+    "appName": "{brandName} PRODE",
+    "appTagline": "Competí con tu comunidad. Demostrá que sabés de fútbol.",
     "tournamentName": "Mundial 2026",
-    "clubName": "O2 Wellness Club",
-    "hashtag": "#PRODEMUNDIALO2"
+    "clubName": "{brandName} {subBrand}",
+    "hashtag": "#PRODEMUNDIAL{hashtagSuffix}"
   },
 
   "common": {
@@ -40,7 +40,7 @@
 
   "auth": {
     "splash": {
-      "title": "PRODE MUNDIAL O2",
+      "title": "PRODE MUNDIAL {hashtagSuffix}",
       "subtitle": "Competí con tus compañeros. Demostrá que sabés de fútbol. Ganá premios.",
       "ctaEnter": "Entrar",
       "noAccount": "¿No tenés cuenta?",
@@ -48,7 +48,7 @@
     },
     "login": {
       "title": "Iniciá sesión",
-      "subtitle": "Entrá con tu cuenta de socio O2.",
+      "subtitle": "Entrá con tu cuenta de socio {brandName}.",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Contraseña",
       "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -58,11 +58,11 @@
       "linkRegister": "Registrate"
     },
     "register": {
-      "title": "Hacete socio O2 Prode",
-      "subtitle": "El acceso es solo para socios del gimnasio.",
+      "title": "Hacete socio {brandName} Prode",
+      "subtitle": "El acceso es solo para socios.",
       "inviteCodePlaceholder": "Código de invitación",
       "ctaValidateCode": "Validar código",
-      "codeOkMessage": "Código válido. Bienvenido, socio O2.",
+      "codeOkMessage": "Código válido. Bienvenido, socio {brandName}.",
       "namePlaceholder": "Nombre completo",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Contraseña",
@@ -213,7 +213,7 @@
 
   "profile": {
     "screenTitle": "Perfil",
-    "memberRole": "Socio O2 · {levelName}",
+    "memberRole": "Socio {brandName} · {levelName}",
     "labels": {
       "position": "Posición",
       "points": "Puntos",

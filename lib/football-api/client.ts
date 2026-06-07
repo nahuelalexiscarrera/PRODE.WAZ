@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Football data · HTTP client (football-data.org v4)
+ * PRODE.WAZ — Football data · HTTP client (football-data.org v4)
  *
  * Auth: header X-Auth-Token. Competición: WC (FIFA World Cup), temporada 2026.
  * Plan premium: live + 20 req/min. El cron trae los 104 partidos en 1 request.

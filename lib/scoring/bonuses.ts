@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Bonus Points (consistency, streaks, perfect days)
+ * PRODE.WAZ — Bonus Points (consistency, streaks, perfect days)
  * Agente 9 · Game Logic
  */
 

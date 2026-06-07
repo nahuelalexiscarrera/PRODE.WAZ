@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Matches · Server Queries
+ * PRODE.WAZ — Matches · Server Queries
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +20,10 @@ export async function getMatchesByGroup(groupId: string) {
     .select(MATCH_FIELDS)
     .eq("group_id", groupId.toUpperCase())
     .order("kickoff_at", { ascending: true });
-  if (error) throw error;
+  if (error) {
+    console.error("[getMatchesByGroup] query falló", error.message);
+    return [];
+  }
   return data ?? [];
 }
 
@@ -38,7 +41,10 @@ export async function getNextMatch() {
     .order("kickoff_at", { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (liveErr) throw liveErr;
+  if (liveErr) {
+    console.error("[getNextMatch] live query falló", liveErr.message);
+    return null;
+  }
   if (live) return live;
 
   // Segundo: próximo partido scheduled
@@ -50,7 +56,10 @@ export async function getNextMatch() {
     .order("kickoff_at", { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {
+    console.error("[getNextMatch] scheduled query falló", error.message);
+    return null;
+  }
   return data;
 }
 
@@ -63,7 +72,10 @@ export async function getKnockoutMatches() {
     .select(MATCH_FIELDS)
     .in("phase", ["round-of-16", "quarter", "semi", "final"])
     .order("kickoff_at", { ascending: true });
-  if (error) throw error;
+  if (error) {
+    console.error("[getKnockoutMatches] query falló", error.message);
+    return [];
+  }
   return data ?? [];
 }
 

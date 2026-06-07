@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Achievement Server Actions
+ * PRODE.WAZ — Achievement Server Actions
  * Agente 11 · Gamification
  *
  * Persists unlocked achievements, applies bonus points,

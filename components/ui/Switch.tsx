@@ -7,14 +7,19 @@ import { springs } from "@/lib/motion/variants";
 interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** Texto visible a la derecha del toggle. */
   label?: string;
+  /** Nombre accesible SIN renderizar texto visible — usar cuando la fila ya
+   *  muestra su propio título a la izquierda (evita texto duplicado). */
+  ariaLabel?: string;
   disabled?: boolean;
   id?: string;
   className?: string;
 }
 
-export function Switch({ checked, onChange, label, disabled, id, className }: SwitchProps) {
+export function Switch({ checked, onChange, label, ariaLabel, disabled, id, className }: SwitchProps) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: el <label> envuelve un botón role="switch" con aria-label/aria-checked; el control accesible es el botón, no un input nativo
     <label
       className={cn(
         "inline-flex items-center gap-3",
@@ -23,9 +28,10 @@ export function Switch({ checked, onChange, label, disabled, id, className }: Sw
       )}
     >
       <button
+        type="button"
         role="switch"
         aria-checked={checked}
-        aria-label={label}
+        aria-label={ariaLabel ?? label}
         id={id}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}

@@ -7,7 +7,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     version: "1.0.0",
-    service: "o2-prode",
+    service: "prode-waz",
     timestamp: new Date().toISOString(),
   });
 }

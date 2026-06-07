@@ -1,4 +1,4 @@
-# O2 PRODE — Next.js Architecture
+# PRODE.WAZ — Next.js Architecture
 
 **Agente 7 · Next.js Architect**
 Versión 1.0 · 2026-05-18

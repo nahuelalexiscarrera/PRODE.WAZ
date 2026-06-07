@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Vitest config
+ * PRODE.WAZ — Vitest config
  * Agente 14 · QA & Performance
  */
 

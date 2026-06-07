@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Icon component
+ * PRODE.WAZ — Icon component
  * Agente 7 · Wraps the custom SVG sprite from design/icons.svg
  *
  * NO usa Lucide ni emojis. Solo el sistema custom (Agente 4 extension).
@@ -51,6 +51,15 @@ export type IconName =
   // System
   | "settings"
   | "logout"
+  // Super admin / management
+  | "plus"
+  | "trash"
+  | "edit"
+  | "image"
+  | "users"
+  | "building"
+  | "palette"
+  | "upload"
   // Brand
   | "o2-mark"
   // Decorative

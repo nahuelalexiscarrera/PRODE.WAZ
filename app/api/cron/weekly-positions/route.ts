@@ -42,10 +42,14 @@ async function handle(req: NextRequest) {
 
   const supabase = createAdminClient();
 
+  // Multi-marca: `position` ya es per-marca después de fn_recalculate_positions(brand_id).
+  // Iteramos todos los users de todas las marcas activas; cada uno se procesa
+  // independientemente y `weeklyPositionDelta` es válido per-user dentro de su marca.
   const { data: users, error: usersErr } = await supabase
     .from("user")
-    .select("id, position, position_last_week")
-    .is("deleted_at", null);
+    .select("id, position, position_last_week, brand_id, brand:brand!brand_id(status)")
+    .is("deleted_at", null)
+    .eq("brand.status", "active");
 
   if (usersErr) return NextResponse.json({ error: usersErr.message }, { status: 500 });
 

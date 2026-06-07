@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Users · Server Queries
+ * PRODE.WAZ — Users · Server Queries
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -59,13 +59,15 @@ export async function getMyProfile(): Promise<UserProfile | null> {
     .from("user")
     .select("id, name, initials, avatar_url, level, total_points, position")
     .eq("id", user.id)
-    .single();
-  if (error) return null;
+    .maybeSingle();
+  if (error || !data) return null;
   return data as UserProfile;
 }
 
-/** ¿El usuario actual es admin/superusuario? Falla a `false` (ej. si la columna
- *  is_admin todavía no existe en la DB), así nunca rompe el render. */
+/** ¿El usuario actual es SUPER admin? Lee `role` (no la columna legacy is_admin,
+ *  que podía desincronizarse). Gatea el panel global (/app/admin, soporte,
+ *  partidos, logros) — operaciones del torneo que son compartidas entre marcas.
+ *  Falla a `false` para nunca romper el render. */
 export async function getIsAdmin(): Promise<boolean> {
   try {
     const supabase = await createClient();
@@ -75,11 +77,35 @@ export async function getIsAdmin(): Promise<boolean> {
     if (!user) return false;
     const { data, error } = await supabase
       .from("user")
-      .select("is_admin")
+      .select("role")
       .eq("id", user.id)
       .maybeSingle();
     if (error) return false;
-    return Boolean((data as { is_admin?: boolean } | null)?.is_admin);
+    return (data as { role?: string } | null)?.role === "super_admin";
+  } catch {
+    return false;
+  }
+}
+
+/** ¿El usuario puede MODERAR contenido del muro? super_admin o brand_admin.
+ *  Se usa para mostrar los controles de moderación. El borrado real
+ *  (deletePost/deleteComment) scopea por marca vía isBrandAdminOf, así que un
+ *  brand_admin solo modera SU marca aunque esta función devuelva true. */
+export async function getCanModerate(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data, error } = await supabase
+      .from("user")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (error) return false;
+    const role = (data as { role?: string } | null)?.role;
+    return role === "super_admin" || role === "brand_admin";
   } catch {
     return false;
   }

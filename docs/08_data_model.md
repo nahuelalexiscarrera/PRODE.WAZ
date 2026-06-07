@@ -1,4 +1,4 @@
-# O2 PRODE — Data Model
+# PRODE.WAZ — Data Model
 
 **Agente 8 · Data Modeler**
 Versión 1.0 · 2026-05-18

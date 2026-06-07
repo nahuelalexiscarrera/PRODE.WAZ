@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   signUpAction,
@@ -12,6 +13,21 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/components/ui/Icon";
+import { useBrand } from "@/components/providers/BrandProvider";
+
+/** Lee y normaliza el brand slug. Prioridad:
+ *  1. ?brand=<slug> query param  (links de invitación viejos, backward-compat)
+ *  2. BrandProvider context      (cuando la ruta ya incluye el slug, ej: /waz/register)
+ *  3. "" → signUpAction usa DEFAULT_BRAND_SLUG ('waz')
+ *
+ *  Acepta solo el formato del schema: /^[a-z0-9-]{2,32}$/ */
+function useBrandSlug(): string {
+  const params = useSearchParams();
+  const brand = useBrand();
+  const fromQuery = params.get("brand")?.trim().toLowerCase() ?? "";
+  const slug = fromQuery || brand?.slug || "";
+  return /^[a-z0-9-]{2,32}$/.test(slug) ? slug : "";
+}
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -84,6 +100,9 @@ function ConfirmSentScreen({ email }: { email: string }) {
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const brandSlug = useBrandSlug();
+  const brand = useBrand();
+  const brandName = brand?.name ?? "WAZ";
   const [state, formAction] = useFormState<ActionResult<{ email: string }> | null, FormData>(
     signUpAction,
     null
@@ -106,7 +125,7 @@ export default function RegisterPage() {
           Volver
         </Link>
         <h1 className="font-display text-display-md leading-tight text-text">
-          Hacete socio O2 PRODE
+          Hacete socio {brandName} PRODE
         </h1>
         <p className="mt-3 text-body-md text-text-muted">
           Creá tu cuenta y empezá a predecir los partidos del Mundial.
@@ -114,6 +133,9 @@ export default function RegisterPage() {
       </header>
 
       <form action={formAction} className="flex flex-col gap-4" noValidate>
+        {/* Marca a la que el socio se está sumando. Si falta, el server cae a 'o2'. */}
+        <input type="hidden" name="brandSlug" value={brandSlug} />
+
         <Input
           label="Nombre completo"
           name="name"

@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Next.js configuration
+ * PRODE.WAZ — Next.js configuration
  * Agente 7 · Next.js Architect
  */
 

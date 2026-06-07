@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Global Styles & Design Tokens
+ * PRODE.WAZ — Global Styles & Design Tokens
  * Agente 3 · Design System
  * Variables CSS derivadas de tokens.json
  */
@@ -26,16 +26,16 @@
     --text-inverse: #0b0b0d;
 
     /* ─── Brand ────────────────────────────────────────────── */
-    --brand-primary: #ff6a00;
-    --brand-primary-hover: #ff7a1a;
-    --brand-primary-pressed: #e65e00;
-    --brand-primary-soft: #ff8a33;
-    --brand-primary-glow: rgba(255, 106, 0, 0.35);
-    --brand-primary-bg: rgba(255, 106, 0, 0.12);
+    --brand-primary: #ccff00;
+    --brand-primary-hover: #b8e600;
+    --brand-primary-pressed: #a3cc00;
+    --brand-primary-soft: #dbff33;
+    --brand-primary-glow: rgba(204, 255, 0, 0.35);
+    --brand-primary-bg: rgba(204, 255, 0, 0.12);
 
     /* ─── Accent ───────────────────────────────────────────── */
-    --accent-lime: #d9ff3f;
-    --accent-lime-soft: rgba(217, 255, 63, 0.18);
+    --accent-lime: #ffffff;
+    --accent-lime-soft: rgba(255, 255, 255, 0.18);
 
     /* ─── Semantic states ──────────────────────────────────── */
     --state-success: #22c55e;
@@ -78,8 +78,8 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
-    --shadow-glow-primary: 0 0 24px rgba(255, 106, 0, 0.35);
-    --shadow-glow-accent: 0 0 24px rgba(217, 255, 63, 0.35);
+    --shadow-glow-primary: 0 0 24px rgba(204, 255, 0, 0.35);
+    --shadow-glow-accent: 0 0 24px rgba(255, 255, 255, 0.35);
 
     /* ─── Motion ───────────────────────────────────────────── */
     --duration-fast: 120ms;

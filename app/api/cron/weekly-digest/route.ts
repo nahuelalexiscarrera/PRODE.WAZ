@@ -39,10 +39,20 @@ async function handle(req: NextRequest) {
   // Fetch users with weeklyDigest enabled
   const { data: users, error: usersErr } = await supabase
     .from("user")
-    .select("id, name, total_points, position, notification_prefs")
+    .select("id, name, total_points, position, notification_prefs, brand_id")
     .is("deleted_at", null);
 
   if (usersErr) return NextResponse.json({ error: usersErr.message }, { status: 500 });
+
+  // Mapa brand_id → etiqueta de marca, para que el digest diga "PRODE.<marca>"
+  // del usuario y NO "PRODE.WAZ" hardcodeado para todas las marcas (C10).
+  const { data: brandRows } = await supabase.from("brand").select("id, name, short_name");
+  const brandLabel = new Map<string, string>(
+    (brandRows ?? []).map((b) => [
+      b.id as string,
+      ((b.short_name as string | null) ?? (b.name as string | null) ?? "WAZ"),
+    ]),
+  );
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
@@ -52,7 +62,7 @@ async function handle(req: NextRequest) {
 
   for (const u of users ?? []) {
     const prefs = (u.notification_prefs as Record<string, boolean> | null) ?? {};
-    if (!prefs["weeklyDigest"]) continue;
+    if (!prefs.weeklyDigest) continue;
 
     const userId = u.id as string;
 
@@ -66,11 +76,12 @@ async function handle(req: NextRequest) {
     const position = (u.position as number) ?? 0;
     const positionLabel = position > 0 ? `#${position}` : "sin clasificar";
     const predsLabel = weeklyPreds ?? 0;
+    const bname = brandLabel.get(u.brand_id as string) ?? "WAZ";
 
     const notif = {
       user_id: userId,
       type: "weekly-digest" as const,
-      title: "Tu semana en O2 PRODE",
+      title: `Tu semana en PRODE.${bname}`,
       body: `${predsLabel} predicciones esta semana · Posición actual: ${positionLabel}`,
       deep_link: "/app/perfil",
     };

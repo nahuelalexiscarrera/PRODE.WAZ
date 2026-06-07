@@ -23,6 +23,15 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", ".next", "out", "dist", "types/database.ts", "*.config.js"]
+    "ignore": [
+      "node_modules",
+      ".next",
+      "out",
+      "dist",
+      "types/database.ts",
+      "*.config.js",
+      "Prode Design System",
+      "_internal"
+    ]
   }
 }

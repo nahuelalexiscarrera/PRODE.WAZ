@@ -38,9 +38,20 @@ export async function upsertPrediction(input: unknown) {
     return { error: "El partido ya está cerrado" as const };
   }
 
+  // Multi-marca: prediction.brand_id es NOT NULL. Lo derivamos de user.brand_id
+  // server-side para que el usuario no pueda inyectar otra marca via cliente.
+  const { data: userRow } = await supabase
+    .from("user")
+    .select("brand_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const brandId = (userRow as { brand_id?: string } | null)?.brand_id;
+  if (!brandId) return { error: "Tu cuenta no tiene marca asignada" as const };
+
   const { error } = await supabase.from("prediction").upsert(
     {
       user_id: user.id,
+      brand_id: brandId,
       match_id: matchId,
       home_score: homeScore,
       away_score: awayScore,
@@ -90,9 +101,18 @@ export async function upsertSpecialPrediction(input: unknown) {
     .maybeSingle();
   if (!tournament) return { error: "Torneo no encontrado" as const };
 
+  const { data: userRow } = await supabase
+    .from("user")
+    .select("brand_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const brandId = (userRow as { brand_id?: string } | null)?.brand_id;
+  if (!brandId) return { error: "Tu cuenta no tiene marca asignada" as const };
+
   const { error } = await supabase.from("special_prediction").upsert(
     {
       user_id: user.id,
+      brand_id: brandId,
       tournament_id: tournament.id as string,
       champion_code: parsed.data.championCode,
       runner_up_code: parsed.data.runnerUpCode,

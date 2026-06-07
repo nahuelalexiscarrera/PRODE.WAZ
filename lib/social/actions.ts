@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isBrandAdminOf } from "@/lib/brands/queries";
 import { processAchievements } from "@/lib/achievements/actions";
 import {
   checkPostRateLimit,
@@ -160,10 +161,20 @@ export async function createPost(
 
   await checkPostRateLimit(supabase, user.id);
 
+  // post.brand_id NOT NULL — lo derivamos del autor para aislar el muro por marca.
+  const { data: userRow } = await supabase
+    .from("user")
+    .select("brand_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const brandId = (userRow as { brand_id?: string } | null)?.brand_id;
+  if (!brandId) throw new Error("MISSING_BRAND");
+
   const { data, error } = await supabase
     .from("post")
     .insert({
       user_id: user.id,
+      brand_id: brandId,
       body: parsed.body,
       embed_type: parsed.embedType ?? null,
       embed_ref_id: parsed.embedRefId ?? null,
@@ -224,6 +235,15 @@ export async function createComment(
 
   await checkCommentRateLimit(supabase, user.id);
 
+  // Defensa en profundidad (además de la RLS): el post objetivo debe ser de la
+  // marca del autor. Evita comentar cross-brand enumerando post_ids ajenos.
+  const { data: postRow } = await supabase
+    .from("post")
+    .select("id")
+    .eq("id", parsed.postId)
+    .maybeSingle();
+  if (!postRow) throw new Error("POST_NOT_FOUND");
+
   const { data, error } = await supabase
     .from("comment")
     .insert({ post_id: parsed.postId, user_id: user.id, body: parsed.body })
@@ -239,31 +259,26 @@ export async function createComment(
   return { comment: data as CommentRow, unlockedAchievements };
 }
 
-/** ¿El usuario es admin? (lee su propia fila; la policy de SELECT lo permite) */
-async function isAdminUser(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string
-): Promise<boolean> {
-  const { data } = await supabase.from("user").select("is_admin").eq("id", userId).maybeSingle();
-  return Boolean((data as { is_admin?: boolean } | null)?.is_admin);
-}
-
 // NOTA — por qué el soft-delete usa el cliente admin (service role):
 // las policies de SELECT de post/comment son `deleted_at IS NULL`. Al setear
 // deleted_at, la fila resultante deja de pasar SELECT y Postgres rechaza el
 // UPDATE con 42501 ("new row violates row-level security policy"). Entonces
-// autorizamos en el server action (dueño o admin) y hacemos el UPDATE con el
-// service role, que no está sujeto a RLS. La autorización queda explícita acá.
+// autorizamos EXPLÍCITAMENTE en el server action (dueño, super_admin, o
+// brand_admin DE LA MARCA del post) y hacemos el UPDATE con el service role.
+// isBrandAdminOf(brandId) devuelve true para super_admin (global) y para el
+// brand_admin de esa marca — así un brand_admin solo modera SU marca.
 
 export async function deletePost(postId: string) {
   const { supabase, user } = await requireUser();
   const { data: row } = await supabase
     .from("post")
-    .select("user_id")
+    .select("user_id, brand_id")
     .eq("id", postId)
     .maybeSingle();
   if (!row) throw new Error("NOT_FOUND");
-  const allowed = row.user_id === user.id || (await isAdminUser(supabase, user.id));
+  const brandId = (row as { brand_id?: string }).brand_id;
+  const allowed =
+    row.user_id === user.id || (!!brandId && (await isBrandAdminOf(brandId)));
   if (!allowed) throw new Error("FORBIDDEN");
 
   const { error } = await createAdminClient()
@@ -276,13 +291,16 @@ export async function deletePost(postId: string) {
 
 export async function deleteComment(commentId: string) {
   const { supabase, user } = await requireUser();
+  // El comment no lleva brand_id; lo resolvemos vía el post al que pertenece.
   const { data: row } = await supabase
     .from("comment")
-    .select("user_id")
+    .select("user_id, post:post!post_id ( brand_id )")
     .eq("id", commentId)
     .maybeSingle();
   if (!row) throw new Error("NOT_FOUND");
-  const allowed = row.user_id === user.id || (await isAdminUser(supabase, user.id));
+  const brandId = (row as { post?: { brand_id?: string } | null }).post?.brand_id;
+  const allowed =
+    row.user_id === user.id || (!!brandId && (await isBrandAdminOf(brandId)));
   if (!allowed) throw new Error("FORBIDDEN");
 
   const { error } = await createAdminClient()

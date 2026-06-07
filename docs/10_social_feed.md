@@ -1,4 +1,4 @@
-# O2 PRODE — Social Feed Module
+# PRODE.WAZ — Social Feed Module
 
 **Agente 10 · Social Feed**
 Versión 1.0 · 2026-05-19

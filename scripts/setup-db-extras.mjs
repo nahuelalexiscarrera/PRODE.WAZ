@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Storage setup
+ * PRODE.WAZ — Storage setup
  *
  * Creates the post-images Storage bucket (public-read, 5 MB limit).
  * For the comment_count trigger, apply: supabase/migrations/20260524_comment_count_trigger.sql

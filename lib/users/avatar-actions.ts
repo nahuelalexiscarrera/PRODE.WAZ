@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function updateAvatar(avatarUrl: string) {
-  if (!avatarUrl.startsWith("/avatares_O2/") || !avatarUrl.endsWith(".webp")) {
+  if (!avatarUrl.startsWith("/avatares/") || !avatarUrl.endsWith(".webp")) {
     return { error: "Avatar inválido" as const };
   }
 

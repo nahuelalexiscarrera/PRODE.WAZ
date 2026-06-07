@@ -1,5 +1,5 @@
 /**
- * O2 PRODE — Auth server actions
+ * PRODE.WAZ — Auth server actions
  *
  * Server actions para login, registro (con invite code) y logout.
  * El registro consume un invite_code de la tabla `invite_code` y crea
@@ -14,7 +14,8 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { deriveInitials } from "@/lib/auth/initials";
+import { ensureUserRowFor } from "@/lib/auth/ensure-user";
+import { DEFAULT_BRAND_SLUG } from "@/lib/brands/queries";
 
 /** URL pública del sitio (para el redirect del mail de confirmación). */
 function siteUrl(): string {
@@ -42,6 +43,15 @@ const registerSchema = z
     password: z.string().min(8, "Mínimo 8 caracteres"),
     passwordConfirm: z.string(),
     referralCode: z.string().trim().toUpperCase().max(16).optional().or(z.literal("")),
+    // Slug de la marca a la que el socio se está registrando. Viene del query
+    // param ?brand=<slug>; si falta, signUpAction lo resuelve al default.
+    brandSlug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9-]{2,32}$/, "Marca inválida")
+      .optional()
+      .or(z.literal("")),
     acceptTerms: z.literal("on", {
       errorMap: () => ({ message: "Tenés que aceptar los términos." }),
     }),
@@ -82,7 +92,7 @@ export async function signInAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   });
@@ -100,6 +110,10 @@ export async function signInAction(
     return { ok: false, error: "Email o contraseña incorrectos." };
   }
 
+  // Self-heal: si la sesión es válida pero falta la fila public.user (ej. tras un
+  // reset de DB, o un signup donde el insert falló), la creamos antes de entrar
+  // usando el user del login (no re-lee sesión). El layout también lo cubre.
+  if (signInData.user) await ensureUserRowFor(signInData.user);
   redirect("/app");
 }
 
@@ -146,6 +160,8 @@ export async function signUpAction(
     phone: formData.get("phone"),
     password: formData.get("password"),
     passwordConfirm: formData.get("passwordConfirm"),
+    referralCode: formData.get("referralCode"),
+    brandSlug: formData.get("brandSlug"),
     acceptTerms: formData.get("acceptTerms"),
   });
 
@@ -154,8 +170,25 @@ export async function signUpAction(
     return { ok: false, error: issue?.message ?? "Datos inválidos", field: String(issue?.path?.[0] ?? "") };
   }
 
-  const { name, email, phone, password, referralCode } = parsed.data;
+  const { name, email, phone, password, referralCode, brandSlug } = parsed.data;
   const normalizedPhone = phone && phone.trim() !== "" ? phone.trim() : null;
+
+  // Resolver la marca: el slug del link de club si es válido y existe; si no
+  // viene o no matchea, cae a la marca demo/default (WAZ). NUNCA bloquea el
+  // registro por una marca inexistente — siempre hay un fallback usable.
+  // ensureUserRow() vuelve a resolver el slug → brand_id al confirmar email.
+  const requestedSlug = brandSlug?.trim().toLowerCase() || DEFAULT_BRAND_SLUG;
+  let normalizedBrandSlug = DEFAULT_BRAND_SLUG;
+  {
+    const admin = createAdminClient();
+    const { data: brand } = await admin
+      .from("brand")
+      .select("slug")
+      .eq("slug", requestedSlug)
+      .eq("status", "active")
+      .maybeSingle();
+    normalizedBrandSlug = brand?.slug ?? DEFAULT_BRAND_SLUG;
+  }
 
   // Registro con CONFIRMACIÓN por email (anti-spam). signUp crea la cuenta SIN
   // confirmar y dispara el mail de verificación; la fila en `user` se crea recién
@@ -167,7 +200,12 @@ export async function signUpAction(
     password,
     options: {
       emailRedirectTo: `${siteUrl()}/auth/confirm`,
-      data: { name, phone: normalizedPhone, referralCode: referralCode || undefined },
+      data: {
+        name,
+        phone: normalizedPhone,
+        referralCode: referralCode || undefined,
+        brandSlug: normalizedBrandSlug,
+      },
     },
   });
 
@@ -194,22 +232,15 @@ export async function signUpAction(
   // Si la confirmación de email NO está activada en Supabase, signUp ya devuelve
   // sesión (cuenta auto-confirmada): creamos la fila y entramos directo. Si SÍ
   // está activada, no hay sesión → mostramos la pantalla "revisá tu email".
+  //
+  // Reusamos ensureUserRowFor(data.user): resuelve brand_id con fallback robusto
+  // (slug → default → cualquier marca activa), nunca inserta con brand_id null,
+  // chequea el error del insert, y genera referral_code + reconcilia invites.
+  // Le pasamos data.user DIRECTO (no re-lee la sesión) porque la cookie recién
+  // creada por signUp() todavía no es legible por un client nuevo en este request.
+  // El slug pedido ya viajó en user_metadata.brandSlug (options.data arriba).
   if (data.session && data.user) {
-    const admin = createAdminClient();
-    const { data: existing } = await admin
-      .from("user")
-      .select("id")
-      .eq("id", data.user.id)
-      .maybeSingle();
-    if (!existing) {
-      await admin.from("user").insert({
-        id: data.user.id,
-        email,
-        name,
-        initials: deriveInitials(name),
-        phone: normalizedPhone,
-      });
-    }
+    await ensureUserRowFor(data.user);
     redirect("/app");
   }
 
