@@ -1,10 +1,15 @@
-# O2 PRODE
+# PRODE.WAZ
 
-App web mobile-first para que los socios del gimnasio **O2** compitan prediciendo
-los partidos del **Mundial 2026**. Asset de marca + retención de socios + viralidad orgánica.
+Plataforma web mobile-first **multi-marca** para que comunidades (gimnasios, clubs,
+empresas) hosteen su propio prode del **Mundial 2026**. Cada marca tiene sus
+usuarios, ranking, branding y configuración aislados, sobre una única
+infraestructura (mismo código, misma Supabase, mismo Vercel).
 
-> **Estado:** Sprints 0–7 completos. Próximo: Sprint 8 (beta cerrada con socios reales).
-> Ver [`docs/SPRINT_8_BETA.md`](docs/SPRINT_8_BETA.md) y [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md).
+Nació como app de un solo gimnasio (**O2 Wellness Club**) y se evolucionó a
+plataforma. O2 es hoy la marca semilla / tenant original.
+
+> Arquitectura multi-marca: ver [`docs/16_multi_brand.md`](docs/16_multi_brand.md).
+> Constitución del repo: [`CLAUDE.md`](CLAUDE.md).
 
 ---
 
@@ -13,21 +18,31 @@ los partidos del **Mundial 2026**. Asset de marca + retención de socios + viral
 ```bash
 pnpm install
 cp .env.example .env.local
-# editar .env.local con credenciales de Supabase
+# editar .env.local con credenciales de Supabase (proyecto propio)
 pnpm dev
 ```
 
 App corre en `http://localhost:3000`.
+
+Para correr la base con las tablas multi-marca:
+
+```bash
+supabase start                 # DB local (Docker)
+supabase db reset              # aplica todas las migraciones en orden
+pnpm supabase:types            # regenera types/database.ts
+# crear un super admin (una vez):
+#   UPDATE "user" SET role = 'super_admin' WHERE email = 'tu@email';
+```
 
 ---
 
 ## Stack
 
 - **Next.js 15** App Router + **TypeScript** strict (`noUncheckedIndexedAccess`)
-- **Tailwind CSS** con design tokens propios
+- **Tailwind CSS** con design tokens propios (theming por marca vía CSS vars)
 - **React 18** + **Framer Motion 11**
-- **Supabase** — auth + DB + Realtime + Storage
-- **@vercel/og** — share PNG server-side
+- **Supabase** — auth + DB + Realtime + Storage (multi-tenant, RLS por marca)
+- **@vercel/og** — share PNG server-side (brand-aware)
 - **Zod** — validación de input en server actions
 - **Vitest** unit + **Playwright** e2e
 - **Biome** lint + format
@@ -55,112 +70,85 @@ pnpm supabase:types   # Regenera types/database.ts desde la DB
 
 ```
 app/                  Next.js App Router
-  (auth)/             Login, register, onboarding
+  (auth)/             Login, register (lee ?brand=<slug>), forgot, reset
   (app)/              Home, Prode, Ranking, Muro, Perfil
-  api/                Edge handlers (share, predictions, reactions)
+    app/super-admin/  Panel Super Admin (marcas, temas, admins, stats globales)
+    app/admin/        Operaciones de plataforma (resultados, logros, soporte)
+  api/                Edge handlers (share brand-aware, predictions, crons)
 components/
-  ui/                 Primitivas (Button, Avatar, ScoreInput, Icon, Flag…)
-  features/           Compuestos (MatchCard, RankingRow, PostCard, BottomNav…)
-  share/              Templates de share card (Satori JSX)
+  ui/                 Primitivas (Button, Avatar, Switch, Icon, Flag…)
+  features/           Compuestos (MatchCard, RankingRow, ScreenHeader…)
+    super-admin/      BrandForm, ThemePicker, BrandAdminsManager…
+  share/              Templates de share card (Satori JSX, brand-aware)
+  providers/          BrandProvider (useBrand) — contexto de marca activa
 lib/
-  supabase/           Clients (browser, server, middleware)
-  scoring/            Engine de puntos
-  ranking/            Cómputo de ranking
+  brands/             queries (getCurrentBrand, isSuperAdmin) + theme (CSS vars)
+  super-admin/        queries + actions del panel
+  supabase/           Clients (browser, server, admin)
+  scoring/            Engine de puntos (paridad con fn_calculate_points)
+  ranking/            Cómputo de ranking (por marca)
   achievements/       Catálogo + triggers + niveles
-  social/             Queries, actions, realtime del muro
+  social/             Queries, actions, realtime del muro (por marca)
   share/              Pipeline server-side de share PNG
-  motion/             Variants Framer
-  a11y/               Helpers de accesibilidad
-  i18n/               es-AR.json (source of truth de copy)
+  i18n/               es-AR.json (placeholders {brandName}) + resolve.ts
 types/
-  domain.ts           Tipos de dominio (escritos a mano)
+  domain.ts           Tipos de dominio (Brand, Theme, User…)
   database.ts         Auto-generado de Supabase
-data/
-  seed/               Datos del Mundial 2026
-  mocks/              Mocks de dev
-public/               Assets servidos (íconos, sprite, manifest, sw.js)
 supabase/
-  schema.sql          DDL completo con RLS, triggers, views
-scripts/              Scripts de DB y mantenimiento
+  schema.sql          DDL de referencia
+  migrations/         Migraciones (multi-brand, super-admin, hardening)
 design/               Mockups HTML + sprite SVG fuente + tokens.json
-docs/                 Documentación arquitectónica (01-15 + extras)
-_internal/            Material histórico (presentaciones, conceptos visuales)
+docs/                 Documentación arquitectónica (01-16 + extras)
 ```
 
-> **Nota:** `_internal/` queda fuera del build y no se sirve. Es archivo histórico
-> del proceso de desarrollo. Ver [`_internal/README.md`](_internal/README.md).
+---
+
+## Multi-marca en 30 segundos
+
+- **Plataforma** = PRODE.WAZ. **Marcas** = tenants (O2, FitClub, …) que viven en
+  la tabla `brand`.
+- Un usuario pertenece a **una** marca (`user.brand_id`), asignada al registrarse
+  vía link de invitación `/register?brand=<slug>`.
+- El **branding** (logo, colores, hashtag, copy) sale de la marca activa: server
+  components usan `getCurrentBrand()`, client components `useBrand()`. Cero strings
+  de marca hardcodeados.
+- **Roles:** `member` · `brand_admin` (admin de su marca) · `super_admin` (owner
+  de la plataforma; crea marcas, sube logos, asigna admins desde `/app/super-admin`).
+- **Aislamiento:** RLS por marca en toda la data de usuario; el torneo (partidos,
+  equipos) es compartido.
 
 ---
 
-## Documentación
-
-| Tema | Doc |
-|---|---|
-| Estrategia de producto, KPIs, personas | [`docs/01_product_strategy.md`](docs/01_product_strategy.md) |
-| Sitemap, flows, scoring, notificaciones | [`docs/02_ux_architecture.md`](docs/02_ux_architecture.md) |
-| Design tokens, tipografía, componentes | [`docs/03_design_system.md`](docs/03_design_system.md) |
-| Specs por pantalla + estados | [`docs/04_ui_designs.md`](docs/04_ui_designs.md) |
-| Pipeline share PNG + 4 templates | [`docs/05_viral_share.md`](docs/05_viral_share.md) |
-| Catálogo de animaciones Framer | [`docs/06_motion.md`](docs/06_motion.md) |
-| Arquitectura Next.js + auth | [`docs/07_nextjs_architecture.md`](docs/07_nextjs_architecture.md) |
-| Modelo de datos + RLS | [`docs/08_data_model.md`](docs/08_data_model.md) |
-| Lógica del juego (scoring) | [`docs/09_game_logic.md`](docs/09_game_logic.md) |
-| Muro social + realtime | [`docs/10_social_feed.md`](docs/10_social_feed.md) |
-| Gamificación + niveles | [`docs/11_gamification.md`](docs/11_gamification.md) |
-| Auditoría WCAG | [`docs/12_a11y_report.md`](docs/12_a11y_report.md) |
-| Voz, tono, copy | [`docs/13_ux_copy.md`](docs/13_ux_copy.md) |
-| Plan de testing + performance | [`docs/14_qa_performance.md`](docs/14_qa_performance.md) |
-| Sign-off final del diseño | [`docs/15_final_checkpoint.md`](docs/15_final_checkpoint.md) |
-| **Checklist pre-deploy** | [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md) |
-| **Sprint 8 (beta cerrada)** | [`docs/SPRINT_8_BETA.md`](docs/SPRINT_8_BETA.md) |
-
-Diseño visual interactivo en [`design/`](design/):
-- `preview.html` — design system completo navegable
-- `icons-system.html` — sprite de iconografía custom
-- `share-argentina-cinematic.html` — share card hero
-- `screens.html` — mockup de 9 pantallas
-- `motion-preview.html` — demos de animaciones
-
----
-
-## Reglas innegociables
+## Reglas innegociables (resumen)
 
 - **Cero emojis Unicode.** Iconografía custom desde `public/design/icons.svg`.
-- **Branding: solo "O2".** Sin referencias a "C2" en ningún lado.
+- **Branding por marca activa.** Nada de "O2" hardcodeado — todo vía `useBrand()` /
+  `getCurrentBrand()` o placeholders en `lib/i18n/es-AR.json`.
 - **es-AR rioplatense.** Voseo siempre. Todo copy en `lib/i18n/es-AR.json`.
 - **Mobile-first PWA.** Container max-width 480px en todos los breakpoints.
-- **Solo dark mode** en MVP.
-- **Auth invite-only.** Padrón cerrado de socios O2.
-- **Sin dinero ni apuestas.** Premios simbólicos definidos por marca aliada.
-- **WCAG 2.1 AA** mínimo en release.
+- **Dark mode** (light por tema queda pendiente).
+- **Registro abierto** (email + teléfono opcional). El padrón cerrado por invite se
+  conserva en código pero no está en el flujo.
+- **Sin dinero ni apuestas.** Premios simbólicos definidos por cada marca.
+- **WCAG 2.1 AA** mínimo.
 
-Ver [`CLAUDE.md`](CLAUDE.md) para la constitución completa del repo.
+Ver [`CLAUDE.md`](CLAUDE.md) para la constitución completa.
 
 ---
 
 ## Deploy
 
-Plataforma: **Vercel** (Next.js detectado automático).
+Plataforma: **Vercel** (Next.js detectado automático). Resumido:
 
-Pasos resumidos:
+1. Repo en GitHub (propio de PRODE.WAZ).
+2. Importar en Vercel → New Project.
+3. Variables de entorno (Supabase URL + keys, VAPID, CRON_SECRET, etc.).
+4. Aplicar migraciones a la Supabase del proyecto y crear el primer `super_admin`.
+5. Actualizar **Site URL** + **Redirect URLs** en Supabase con el dominio de Vercel.
 
-1. Push del repo a GitHub.
-2. Importar el repo en Vercel → New Project.
-3. Configurar variables de entorno (ver `.env.example` y [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md)).
-4. Actualizar **Site URL** y **Redirect URLs** en Supabase con el dominio de Vercel.
-5. Insertar invite codes manuales para los primeros 5–10 beta testers.
-
-Checklist completo y comandos en [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md).
+Checklist completo en [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md).
 
 ---
 
-## Branding
-
-El gimnasio se llama **O2**.
-- Socios: **Socio O2**
-- Nivel top de gamificación: **Leyenda O2**
-- Hashtag de viralidad: **#PRODEMUNDIALO2**
-
----
-
-*Mundial 2026. KaiStudio
+*Mundial 2026 · KaiStudio*
+# PRODE.WAZ
