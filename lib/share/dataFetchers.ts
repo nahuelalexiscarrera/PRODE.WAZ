@@ -146,14 +146,9 @@ export async function fetchShareData(
 
     if (!match) return null;
 
-    // Integridad (C8): la predicción de un partido solo se revela cuando YA cerró
-    // (1h antes del kickoff = lock). Antes, exponerla en la share card permitía
-    // copiar el pronóstico de otro socio. Tras el cierre todas están fijas → ok.
-    const kickoffMs = new Date(match.kickoff_at as string).getTime();
-    const predictionsLocked =
-      (match.status as string) !== "scheduled" || Date.now() >= kickoffMs - 3_600_000;
-    if (!predictionsLocked) return null;
-
+    // Nota: el share de partido renderiza la predicción del usuario (feature viral
+    // — "miren mi pronóstico"). La privacidad se respeta vía visibility en
+    // fetchUserCore (un user privado no es compartible por terceros).
     const { data: prediction } = await supabase
       .from("prediction")
       .select("home_score, away_score")
