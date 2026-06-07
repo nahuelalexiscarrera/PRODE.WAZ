@@ -66,6 +66,11 @@ export function ShareButton({
 
   const params = new URLSearchParams({ format });
   if (contextId) params.set("contextId", contextId);
+  // Cache-buster por tema: el PNG se cachea (CDN s-maxage 1h, browser 5min). Sin
+  // esto, cambiar el tema de la marca NO se reflejaba hasta que vencía la caché.
+  // El slug del tema cambia → cambia la URL → imagen fresca; mismo tema = caché
+  // preservada (bueno para virality). El endpoint ignora `v`, solo rompe la caché.
+  params.set("v", brand?.theme?.slug ?? "default");
   const imageUrl = `/api/share/${template}/${userId}?${params.toString()}`;
 
   async function handleDownload() {

@@ -144,7 +144,11 @@ export async function GET(
     ...dims,
     fonts,
     headers: {
-      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      // Caché corta: el share es un snapshot per-usuario (posición/puntos/tema
+      // cambian seguido). Antes (s-maxage 1h) un cambio de tema/puntos no se
+      // reflejaba hasta vencer la caché. Ahora refresca en ~1 min; el ?v=<tema>
+      // del ShareButton además lo hace inmediato al cambiar el tema.
+      "Cache-Control": "public, max-age=30, s-maxage=60, stale-while-revalidate=300",
       "Cache-Tag": `user-${userId}`,
     },
   });
