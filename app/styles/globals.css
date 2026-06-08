@@ -357,3 +357,42 @@ textarea,
 select {
   font-size: 16px;
 }
+
+/* ─── Premium login / "WAZ Experience" splash ────────────────
+   Keyframes del diseño de Claude Design (WAZ Onboarding). Prefijo `waz` para
+   no chocar con pulse/shimmer. Respetan prefers-reduced-motion vía la regla
+   global de arriba (animation-duration → 0.01ms). */
+@keyframes wazFadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes wazFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-11px); }
+}
+@keyframes wazHaloPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+@keyframes wazHaloDrift {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(20px, -26px); }
+}
+@keyframes wazCharReveal {
+  from { opacity: 0; transform: translateY(10px); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes wazShimmerPass {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(400%); }
+}
+@keyframes wazLineDraw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes wazRingRotate {
+  to { transform: rotate(360deg); }
+}
+@keyframes wazSpin {
+  to { transform: rotate(360deg); }
+}

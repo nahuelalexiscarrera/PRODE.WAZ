@@ -1,170 +1,255 @@
 "use client";
 
+/**
+ * Login premium — diseño "WAZ Onboarding" (Claude Design) portado a React.
+ * Splash #WAZEXPERIENCE (1×/sesión) + fondo holográfico + logo hero + panel glass,
+ * todo brand-aware (colores de la marca activa). La LÓGICA de auth se mantiene
+ * intacta: <form action={signInAction}>, useFormStatus (pending), estado de error.
+ */
+
 import Link from "next/link";
-import Image from "next/image";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import { signInAction, type ActionResult } from "@/lib/auth/actions";
-import { useBrand } from "@/components/providers/BrandProvider";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { IconButton } from "@/components/ui/IconButton";
-import { Icon } from "@/components/ui/Icon";
+import { Icon, type IconName } from "@/components/ui/Icon";
+import { HoloBg, WazMark, GymLogoHero, useBrandColors } from "@/components/features/auth/AuthDecor";
+import { WazSplash } from "@/components/features/auth/WazSplash";
 
+// ─── Input premium (native, alimenta el form action) ───────────────────
+function PInput({
+  name,
+  type = "text",
+  label,
+  icon,
+  autoComplete,
+  error,
+  right,
+}: {
+  name: string;
+  type?: string;
+  label: string;
+  icon?: IconName;
+  autoComplete?: string;
+  error?: boolean;
+  right?: ReactNode;
+}) {
+  const { primary, primaryRgb: r } = useBrandColors();
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label
+        htmlFor={name}
+        style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: error ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.26)" }}
+      >
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        {icon && (
+          <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: focused ? primary : "rgba(255,255,255,0.2)", transition: "color 0.2s", display: "flex", zIndex: 1 }}>
+            <Icon name={icon} size={16} />
+          </div>
+        )}
+        <input
+          id={name}
+          name={name}
+          type={type}
+          required
+          autoComplete={autoComplete}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: "100%",
+            height: 56,
+            borderRadius: 14,
+            background: focused ? `rgba(${r},0.08)` : "rgba(10,10,18,0.9)",
+            border: `1px solid ${error ? "rgba(239,68,68,0.5)" : focused ? `rgba(${r},0.5)` : "rgba(255,255,255,0.11)"}`,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            color: "#f5f7fa",
+            fontFamily: "inherit",
+            paddingLeft: icon ? 44 : 16,
+            paddingRight: right ? 50 : 16,
+            outline: "none",
+            transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s",
+            boxShadow: focused ? `0 0 0 3px rgba(${r},0.08), inset 0 1px 0 rgba(255,255,255,0.05)` : "inset 0 1px 0 rgba(255,255,255,0.04)",
+          }}
+        />
+        {right && <div style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}>{right}</div>}
+      </div>
+    </div>
+  );
+}
+
+function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+      style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}
+    >
+      <Icon name="eye" size={16} />
+    </button>
+  );
+}
+
+// ─── Botón premium con estado pending del form ─────────────────────────
+function PSubmit({ children }: { children: ReactNode }) {
+  const { pending } = useFormStatus();
+  const { primary, primaryRgb: r, inv, invRgb } = useBrandColors();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      style={{
+        width: "100%",
+        height: 58,
+        borderRadius: 9999,
+        background: primary,
+        color: inv,
+        border: "none",
+        fontFamily: "var(--font-display)",
+        fontSize: 14,
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        cursor: pending ? "not-allowed" : "pointer",
+        opacity: pending ? 0.9 : 1,
+        transition: "box-shadow 0.2s, opacity 0.2s",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: `0 0 0 1px rgba(${r},0.22), 0 8px 30px rgba(${r},0.2)`,
+      }}
+    >
+      <span style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 52%)", pointerEvents: "none" }} />
+      {pending ? (
+        <span style={{ width: 20, height: 20, border: `2.5px solid rgba(${invRgb},0.28)`, borderTopColor: inv, borderRadius: "50%", animation: "wazSpin 0.7s linear infinite", display: "inline-block" }} />
+      ) : (
+        <span style={{ position: "relative", zIndex: 1 }}>{children}</span>
+      )}
+    </button>
+  );
+}
+
+// ─── Banner de confirmación (?confirm / ?error) ────────────────────────
 function ConfirmBanner() {
   const searchParams = useSearchParams();
   const confirmed = searchParams.get("confirm") === "1";
   const errorConfirm = searchParams.get("error") === "confirm";
   if (!confirmed && !errorConfirm) return null;
-
-  if (errorConfirm) {
-    return (
-      <div className="mb-6 rounded-md bg-surface border border-error/30 px-4 py-3 flex items-start gap-3">
-        <Icon name="info" size={18} className="text-error mt-0.5" />
-        <p className="text-body-sm text-text">
-          El link de confirmación venció o ya se usó. Si ya confirmaste, entrá con tu contraseña; si
-          no, registrate de nuevo para recibir uno nuevo.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-6 rounded-md bg-surface border border-info/30 px-4 py-3 flex items-start gap-3">
-      <Icon name="info" size={18} className="text-info mt-0.5" />
-      <p className="text-body-sm text-text">
-        Cuenta creada. Revisá tu email para confirmarla y después entrá con tu contraseña.
+    <div
+      style={{ marginBottom: 14, borderRadius: 12, padding: "11px 13px", display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(255,255,255,0.03)", border: `1px solid ${errorConfirm ? "rgba(239,68,68,0.3)" : "rgba(56,189,248,0.3)"}` }}
+    >
+      <Icon name="info" size={16} className={errorConfirm ? "text-error" : "text-info"} />
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+        {errorConfirm
+          ? "El link de confirmación venció o ya se usó. Entrá con tu contraseña o registrate de nuevo."
+          : "Cuenta creada. Revisá tu email para confirmarla y después entrá."}
       </p>
     </div>
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" variant="primary" size="lg" fullWidth loading={pending}>
-      Ingresar
-    </Button>
-  );
-}
-
-/** Barra de marca: wordmark "PRODE.<marca>" (o logo subido) + badge con la
- *  sigla de la marca. Lee la marca activa de useBrand() (la resuelve el layout
- *  de (auth) por ?brand=<slug> / cookie / default WAZ). */
-function BrandBar() {
-  const brand = useBrand();
-  const name = brand?.name ?? "WAZ";
-  const badge = (brand?.shortName ?? name).slice(0, 3).toUpperCase();
-  const logoUrl = brand?.logoUrl ?? null;
-
-  return (
-    <div className="flex items-center justify-between">
-      {logoUrl ? (
-        <Image
-          src={logoUrl}
-          alt={`${name} logo`}
-          width={120}
-          height={36}
-          unoptimized={logoUrl.startsWith("http")}
-          className="h-9 w-auto object-contain"
-        />
-      ) : (
-        <span className="font-display text-heading-md uppercase tracking-[0.04em] leading-none text-text">
-          PRODE<span className="text-primary">.{name}</span>
-        </span>
-      )}
-      <span className="flex items-center justify-center min-w-10 h-10 px-2 rounded-xl bg-primary-bg border border-primary/30">
-        <span className="font-display text-heading-sm text-primary leading-none">{badge}</span>
-      </span>
-    </div>
-  );
-}
-
+// ─── Página ────────────────────────────────────────────────────────────
 export default function LoginPage() {
-  const brand = useBrand();
-  const [showPassword, setShowPassword] = useState(false);
+  const { primary, primaryRgb, brand } = useBrandColors();
+  const [showPw, setShowPw] = useState(false);
   const [state, formAction] = useFormState<ActionResult | null, FormData>(signInAction, null);
   const errorField = state && !state.ok ? state.field : undefined;
-  const hashtag = "#WAZEXPERIENCE";
+
+  // Splash "WAZ Experience" una vez por sesión. Arranca visible (aparece primero,
+  // sin flash del login) y se oculta al instante si ya se mostró esta sesión.
+  const [splashDone, setSplashDone] = useState(false);
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("waz_splash") === "1") setSplashDone(true);
+    } catch {
+      /* sin sessionStorage → el splash se muestra una vez y completa solo */
+    }
+  }, []);
+  function finishSplash() {
+    try {
+      sessionStorage.setItem("waz_splash", "1");
+    } catch {}
+    setSplashDone(true);
+  }
+
+  const name = brand?.name ?? "WAZ";
+  const tagline = (brand?.subBrand ?? "Prode Mundial 2026").toUpperCase();
 
   return (
-    <div className="min-h-screen flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] pb-10">
-      <BrandBar />
+    <>
+      {!splashDone && <WazSplash onDone={finishSplash} />}
 
-      {/* Hero editorial */}
-      <header className="mt-10">
-        <h1 className="font-display uppercase leading-[0.82] text-text">
-          <span className="block text-[1.5rem] tracking-[0.18em] text-text-muted">Predecí</span>
-          <span className="block text-[4rem] tracking-[0.01em] text-primary">Mundial</span>
-          <span className="block text-[1.5rem] tracking-[0.42em] text-text-muted mt-1">2 0 2 6</span>
-        </h1>
-      </header>
+      <div style={{ minHeight: "100dvh", position: "relative", display: "flex", flexDirection: "column", background: "#050508" }}>
+        <HoloBg />
 
-      <div className="flex-1 min-h-[4vh]" />
+        <div style={{ height: "max(28px, env(safe-area-inset-top))", flexShrink: 0 }} />
+        <div style={{ padding: "0 24px", display: "flex", justifyContent: "flex-end", position: "relative", zIndex: 1 }}>
+          <WazMark right />
+        </div>
 
-      <div className="border-t border-border mb-7" />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px", position: "relative", zIndex: 1, gap: 28 }}>
+          {/* Identidad del gym — protagonista */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", animation: "wazFadeInUp 0.8s cubic-bezier(0,0,0,1) 0.05s both" }}>
+            <div style={{ animation: "wazFloat 9s ease-in-out infinite", marginBottom: 18 }}>
+              <GymLogoHero size={100} />
+            </div>
+            <h1 className="font-display" style={{ fontSize: 28, textTransform: "uppercase", color: "#f5f7fa", letterSpacing: "0.02em", lineHeight: 1, marginBottom: 6 }}>
+              {name}
+            </h1>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)" }}>
+              {tagline}
+            </span>
+          </div>
 
-      <Suspense fallback={null}>
-        <ConfirmBanner />
-      </Suspense>
+          {/* Panel glass */}
+          <div style={{ animation: "wazFadeInUp 0.8s cubic-bezier(0,0,0,1) 0.18s both", background: "rgba(16,16,26,0.88)", backdropFilter: "blur(40px) saturate(160%)", WebkitBackdropFilter: "blur(40px) saturate(160%)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "20px 20px", boxShadow: "0 0 0 0.5px rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+            <Suspense fallback={null}>
+              <ConfirmBanner />
+            </Suspense>
+            <form action={formAction} noValidate style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+              <PInput name="email" type="email" label="Email" icon="mail" autoComplete="email" error={errorField === "email"} />
+              <PInput
+                name="password"
+                type={showPw ? "text" : "password"}
+                label="Contraseña"
+                icon="lock"
+                autoComplete="current-password"
+                error={errorField === "password"}
+                right={<EyeToggle show={showPw} onToggle={() => setShowPw((v) => !v)} />}
+              />
+              {state && !state.ok && (
+                <p role="alert" style={{ fontSize: 12, color: "rgba(239,68,68,0.85)", paddingLeft: 2 }}>
+                  {state.error}
+                </p>
+              )}
+              <div style={{ textAlign: "right", marginTop: -2 }}>
+                <Link href="/forgot" style={{ fontSize: 11, fontWeight: 600, color: `rgba(${primaryRgb},0.7)` }}>
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <PSubmit>Ingresar</PSubmit>
+            </form>
+          </div>
 
-      <form action={formAction} className="flex flex-col gap-4" noValidate>
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          state={errorField === "email" ? "error" : "default"}
-        />
-
-        <Input
-          label="Contraseña"
-          name="password"
-          type={showPassword ? "text" : "password"}
-          autoComplete="current-password"
-          required
-          leftIcon="lock"
-          state={errorField === "password" ? "error" : "default"}
-          rightElement={
-            <IconButton
-              type="button"
-              label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              icon="eye"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowPassword((v) => !v)}
-            />
-          }
-        />
-
-        {state && !state.ok && (
-          <p role="alert" className="text-body-sm text-error">
-            {state.error}
+          {/* Footer */}
+          <p style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.28)", animation: "wazFadeInUp 0.8s cubic-bezier(0,0,0,1) 0.3s both" }}>
+            ¿Sos socio nuevo?{" "}
+            <Link href="/register" style={{ color: primary, fontWeight: 700 }}>
+              Unite al prode
+            </Link>
           </p>
-        )}
-
-        <div className="text-right -mt-1">
-          <Link href="/forgot" className="text-body-sm text-primary hover:underline">
-            ¿Olvidaste tu contraseña?
-          </Link>
         </div>
 
-        <div className="mt-2">
-          <SubmitButton />
+        <div style={{ padding: "18px 24px max(24px,env(safe-area-inset-bottom))", display: "flex", justifyContent: "center", position: "relative", zIndex: 1 }}>
+          <WazMark />
         </div>
-      </form>
-
-      <footer className="mt-8 text-center">
-        <p className="text-body-sm text-text-muted">
-          ¿Sos socio nuevo?{" "}
-          <Link href="/register" className="text-primary font-semibold hover:underline">
-            Registrate
-          </Link>
-        </p>
-        <p className="mt-5 text-[10px] uppercase tracking-[0.28em] text-text-disabled">{hashtag}</p>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }

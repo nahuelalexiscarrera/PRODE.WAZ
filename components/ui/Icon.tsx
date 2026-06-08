@@ -29,6 +29,7 @@ export type IconName =
   | "more"
   // States
   | "lock"
+  | "mail"
   | "clock"
   | "bell"
   | "check"
