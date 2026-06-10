@@ -14,29 +14,16 @@ interface AvatarPickerProps {
   onClose: () => void;
 }
 
+// Solo los avatares que existen en /public/avatares/ (screen 2–8.webp).
+// El resto se borró; no agregar URLs sin su .webp o el picker muestra rotos.
 const AVATAR_URLS = [
-  "/avatares/screen.webp",
   "/avatares/screen 2.webp",
   "/avatares/screen 3.webp",
   "/avatares/screen 4.webp",
   "/avatares/screen 5.webp",
   "/avatares/screen 6.webp",
   "/avatares/screen 7.webp",
-  "/avatares/screen 8.webp",
-  "/avatares/screen 9.webp",
-  "/avatares/screen 10.webp",
-  "/avatares/screen 11.webp",
-  "/avatares/screen 12.webp",
-  "/avatares/screen 13.webp",
-  "/avatares/screen 14.webp",
-  "/avatares/screen 15.webp",
-  "/avatares/screen 16.webp",
-  "/avatares/screen 17.webp",
-  "/avatares/screen 18.webp",
-  "/avatares/screen 19.webp",
-  "/avatares/screen 20.webp",
-  "/avatares/screen 21.webp",
-  "/avatares/screen 22.webp"
+  "/avatares/screen 8.webp"
 ];
 
 export function AvatarPicker({ currentAvatarUrl, open, onClose }: AvatarPickerProps) {
