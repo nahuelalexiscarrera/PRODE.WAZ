@@ -87,6 +87,47 @@ export async function getIsAdmin(): Promise<boolean> {
   }
 }
 
+export type AdminAccess = {
+  isSuperAdmin: boolean;
+  /** Tiene >= 1 fila en brand_admin (administra al menos una marca). */
+  isBrandAdmin: boolean;
+  /** Marcas que administra. Vacío para super_admin (su acceso es global). */
+  brandIds: string[];
+};
+
+const NO_ADMIN_ACCESS: AdminAccess = { isSuperAdmin: false, isBrandAdmin: false, brandIds: [] };
+
+/** Acceso al panel de admin: super_admin (global) o brand_admin (scoped a sus
+ *  marcas via tabla brand_admin — fuente de verdad por-marca, no el role solo).
+ *  Gatea /app/admin (dashboard) y soporte; partidos/logros siguen siendo
+ *  super_admin-only vía getIsAdmin(). Falla a "sin acceso" para nunca romper. */
+export async function getAdminAccess(): Promise<AdminAccess> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NO_ADMIN_ACCESS;
+    const { data, error } = await supabase
+      .from("user")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (error) return NO_ADMIN_ACCESS;
+    if ((data as { role?: string } | null)?.role === "super_admin") {
+      return { isSuperAdmin: true, isBrandAdmin: false, brandIds: [] };
+    }
+    const { data: rows } = await supabase
+      .from("brand_admin")
+      .select("brand_id")
+      .eq("user_id", user.id);
+    const brandIds = (rows ?? []).map((r) => r.brand_id as string);
+    return { isSuperAdmin: false, isBrandAdmin: brandIds.length > 0, brandIds };
+  } catch {
+    return NO_ADMIN_ACCESS;
+  }
+}
+
 /** ¿El usuario puede MODERAR contenido del muro? super_admin o brand_admin.
  *  Se usa para mostrar los controles de moderación. El borrado real
  *  (deletePost/deleteComment) scopea por marca vía isBrandAdminOf, así que un

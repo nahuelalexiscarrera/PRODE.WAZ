@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getMyProfile, getIsAdmin, getMyReferral } from "@/lib/users/queries";
-import { isSuperAdmin } from "@/lib/brands/queries";
+import { getMyProfile, getAdminAccess, getMyReferral } from "@/lib/users/queries";
 import { ReferralCard } from "@/components/features/ReferralCard";
 import { getMyPredictionCount } from "@/lib/predictions/queries";
 import { getLevelMeta } from "@/lib/achievements/levels";
@@ -19,11 +18,10 @@ export default async function PerfilPage() {
   if (error || !data?.user) redirect("/login");
   const user = data.user;
 
-  const [profile, predictionCount, isAdmin, superAdmin, referral] = await Promise.all([
+  const [profile, predictionCount, access, referral] = await Promise.all([
     getMyProfile(),
     getMyPredictionCount(user.id),
-    getIsAdmin(),
-    isSuperAdmin(),
+    getAdminAccess(),
     getMyReferral(),
   ]);
 
@@ -72,8 +70,10 @@ export default async function PerfilPage() {
 
       {/* Navigation */}
       <div className="mx-4 bg-card rounded-xl border border-border overflow-hidden">
-        {superAdmin && <NavRow href="/app/super-admin" label="Super Admin · marcas" />}
-        {isAdmin && <NavRow href="/app/admin" label="Panel de admin" />}
+        {access.isSuperAdmin && <NavRow href="/app/super-admin" label="Super Admin · marcas" />}
+        {(access.isSuperAdmin || access.isBrandAdmin) && (
+          <NavRow href="/app/admin" label="Panel de admin" />
+        )}
         <NavRow href="/app/perfil/logros" label="Logros" />
         <NavRow href="/app/perfil/notificaciones" label="Notificaciones" />
         <NavRow href="/app/perfil/configuracion" label="Configuración" />

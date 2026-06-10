@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { getIsAdmin } from "@/lib/users/queries";
+import { getAdminAccess } from "@/lib/users/queries";
 import { getAdminMetrics } from "@/lib/admin/queries";
 import { ScreenHeader } from "@/components/features/ScreenHeader";
 import { NavRow } from "@/components/features/NavRow";
@@ -35,9 +35,11 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user) redirect("/login");
-  if (!(await getIsAdmin())) notFound();
+  const access = await getAdminAccess();
+  if (!access.isSuperAdmin && !access.isBrandAdmin) notFound();
 
-  const m = await getAdminMetrics();
+  // Super admin ve totales globales; brand admin ve SOLO su marca.
+  const m = await getAdminMetrics(access.isSuperAdmin ? undefined : access.brandIds[0]);
 
   return (
     <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col">
@@ -48,8 +50,12 @@ export default async function AdminPage() {
       </p>
 
       <div className="mx-4 mb-6 bg-card rounded-xl border border-border overflow-hidden">
-        <NavRow href="/app/admin/partidos" label="Cargar resultados de partidos" />
-        <NavRow href="/app/admin/logros" label="Puntos de logros" />
+        {access.isSuperAdmin ? (
+          <>
+            <NavRow href="/app/admin/partidos" label="Cargar resultados de partidos" />
+            <NavRow href="/app/admin/logros" label="Puntos de logros" />
+          </>
+        ) : null}
         <NavRow href="/app/admin/soporte" label="Soporte (tickets a Jira)" />
       </div>
 
@@ -71,7 +77,7 @@ export default async function AdminPage() {
       <Section title="Muro">
         <Metric label="Posts" value={m.posts} />
         <Metric label="Comentarios" value={m.comentarios} />
-        <Metric label="Reacciones" value={m.reacciones} />
+        {m.reacciones !== null ? <Metric label="Reacciones" value={m.reacciones} /> : null}
       </Section>
     </div>
   );

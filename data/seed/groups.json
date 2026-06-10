@@ -1,18 +1,18 @@
 {
-  "$comment": "Mundial 2026 — 12 grupos (A-L). Placeholder hasta sorteo oficial. Estructura del Agente 8.",
+  "$comment": "Mundial 2026 — 12 grupos (A-L) REALES (sorteo 5 dic 2025).",
   "tournamentId": "mundial-2026",
   "groups": [
-    { "id": "A", "letter": "A", "teamCodes": ["mx", "ar", "jp", "qa"] },
-    { "id": "B", "letter": "B", "teamCodes": ["us", "br", "kr", "ec"] },
-    { "id": "C", "letter": "C", "teamCodes": ["ca", "fr", "ng", "uy"] },
-    { "id": "D", "letter": "D", "teamCodes": ["de", "co", "sa", "se"] },
-    { "id": "E", "letter": "E", "teamCodes": ["es", "ma", "au", "cr"] },
-    { "id": "F", "letter": "F", "teamCodes": ["pt", "ir", "pa", "be"] },
-    { "id": "G", "letter": "G", "teamCodes": ["nl", "sn", "no", "ws"] },
-    { "id": "H", "letter": "H", "teamCodes": ["it", "tn", "cl", "jm"] },
-    { "id": "I", "letter": "I", "teamCodes": ["gb", "ck", "py", "tr"] },
-    { "id": "J", "letter": "J", "teamCodes": ["dk", "om", "ci", "hr"] },
-    { "id": "K", "letter": "K", "teamCodes": ["pl", "ke", "ve", "nz"] },
-    { "id": "L", "letter": "L", "teamCodes": ["ch", "eg", "pe", "uz"] }
+    { "id": "A", "letter": "A", "teamCodes": ["mx", "za", "kr", "cz"] },
+    { "id": "B", "letter": "B", "teamCodes": ["ca", "ba", "qa", "ch"] },
+    { "id": "C", "letter": "C", "teamCodes": ["br", "ma", "ht", "gb-sct"] },
+    { "id": "D", "letter": "D", "teamCodes": ["us", "py", "au", "tr"] },
+    { "id": "E", "letter": "E", "teamCodes": ["de", "cw", "ci", "ec"] },
+    { "id": "F", "letter": "F", "teamCodes": ["nl", "jp", "se", "tn"] },
+    { "id": "G", "letter": "G", "teamCodes": ["be", "eg", "ir", "nz"] },
+    { "id": "H", "letter": "H", "teamCodes": ["es", "cv", "sa", "uy"] },
+    { "id": "I", "letter": "I", "teamCodes": ["fr", "sn", "iq", "no"] },
+    { "id": "J", "letter": "J", "teamCodes": ["ar", "dz", "at", "jo"] },
+    { "id": "K", "letter": "K", "teamCodes": ["pt", "cd", "uz", "co"] },
+    { "id": "L", "letter": "L", "teamCodes": ["gb-eng", "hr", "gh", "pa"] }
   ]
 }

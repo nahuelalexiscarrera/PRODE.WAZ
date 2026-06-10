@@ -90,6 +90,22 @@ async function reconcileBrandAdminInvites(
   }
 }
 
+/** Reconcilia invites de brand_admin para un user que YA tiene fila. Para
+ *  usar en sign-in (password y OAuth): ensureUserRowFor solo reconcilia al
+ *  CREAR la fila, así que un invite emitido después del alta quedaba pendiente
+ *  para siempre — el cliente "asignado" desde super-admin nunca obtenía el rol.
+ *  Idempotente + fail-safe. */
+export async function reconcileBrandAdminInvitesFor(
+  user: Pick<User, "id" | "email">
+): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    await reconcileBrandAdminInvites(admin, user.id, user.email);
+  } catch (e) {
+    console.error("[reconcileBrandAdminInvitesFor] error", e);
+  }
+}
+
 /** Crea la fila public.user para un auth user dado. Idempotente + fail-safe.
  *  Toma el User directamente → seguro en el mismo request que signUp/signIn. */
 export async function ensureUserRowFor(user: User, brandSlugOverride?: string): Promise<void> {

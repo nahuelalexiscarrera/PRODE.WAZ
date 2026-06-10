@@ -21,7 +21,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
-import { ensureUserRowFor } from "@/lib/auth/ensure-user";
+import { ensureUserRowFor, reconcileBrandAdminInvitesFor } from "@/lib/auth/ensure-user";
 import { createClient } from "@/lib/supabase/server";
 
 const SLUG_RE = /^[a-z0-9-]{2,32}$/;
@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
       // 1ª vez con Google: crea la fila con brand_id = la marca del link.
       // Después es no-op idempotente (la fila ya existe).
       await ensureUserRowFor(data.user, brand);
+      // Invites de brand_admin emitidos después del alta (usuario pre-existente).
+      await reconcileBrandAdminInvitesFor(data.user);
       redirect(next);
     }
   }

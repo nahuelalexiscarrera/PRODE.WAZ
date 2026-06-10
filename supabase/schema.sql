@@ -350,15 +350,20 @@ CREATE POLICY "Socios leen predicciones públicas"
          OR EXISTS (SELECT 1 FROM "user" WHERE id = prediction.user_id AND visibility = 'public'))
   );
 
+-- Cierre: 5 minutos antes del kickoff (espejo TS: lib/predictions/constants.ts).
+-- Versión final (con marca + chequeo horario en INSERT): migración 20260615000001.
 CREATE POLICY "User inserta sus predicciones"
   ON prediction FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (
+    auth.uid() = user_id
+    AND EXISTS (SELECT 1 FROM match WHERE id = match_id AND status = 'scheduled' AND (kickoff_at - INTERVAL '5 minutes') > NOW())
+  );
 
 CREATE POLICY "User actualiza sus predicciones (si no cerró el partido)"
   ON prediction FOR UPDATE
   USING (
     auth.uid() = user_id
-    AND EXISTS (SELECT 1 FROM match WHERE id = match_id AND (kickoff_at - INTERVAL '1 hour') > NOW())
+    AND EXISTS (SELECT 1 FROM match WHERE id = match_id AND status = 'scheduled' AND (kickoff_at - INTERVAL '5 minutes') > NOW())
   );
 
 -- Posts y comments: lectura abierta a socios; CRUD del dueño

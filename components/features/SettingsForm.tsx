@@ -153,7 +153,7 @@ export function SettingsForm({ email, initialPrefs, initialVisibility, avatarUrl
         <PushToggle />
         <SettingsRow
           label="Próximos partidos"
-          description="Aviso 1h antes del cierre de predicciones"
+          description="Aviso 1 h antes del partido"
           checked={prefs.matchReminders}
           onChange={(v) => handlePrefChange("matchReminders", v)}
           disabled={isPending}

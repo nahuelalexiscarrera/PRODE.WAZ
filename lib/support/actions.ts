@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getIsAdmin } from "@/lib/users/queries";
+import { getAdminAccess } from "@/lib/users/queries";
 import { sendSupportEmail, isEmailConfigured } from "@/lib/email/send";
 
 const ticketSchema = z.object({
@@ -28,7 +28,8 @@ export async function createSupportTicketAction(input: unknown): Promise<CreateT
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
-  if (!(await getIsAdmin())) return { ok: false, error: "No autorizado" };
+  const access = await getAdminAccess();
+  if (!access.isSuperAdmin && !access.isBrandAdmin) return { ok: false, error: "No autorizado" };
 
   const supabase = await createClient();
   const {

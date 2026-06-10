@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { isPredictionLocked } from "@/lib/predictions/constants";
 
 const UpsertSchema = z.object({
   matchId: z.string().uuid(),
@@ -28,12 +29,11 @@ export async function upsertPrediction(input: unknown) {
     .single();
   if (matchErr || !match) return { error: "Partido no encontrado" as const };
 
-  // Solo se predice un partido programado y antes del cierre (1h antes del
-  // kickoff). Si ya está en juego (live), terminado o postergado, está cerrado.
-  // (Antes el `&& status !== "live"` dejaba editar partidos EN JUEGO — bug de
-  // integridad: se podía "predecir" viendo el partido.)
-  const lockoutAt = new Date(match.kickoff_at).getTime() - 60 * 60 * 1000;
-  const isOpen = match.status === "scheduled" && Date.now() < lockoutAt;
+  // Solo se predice un partido programado y antes del cierre (5 min antes del
+  // kickoff — regla en lib/predictions/constants). Si ya está en juego (live),
+  // terminado o postergado, está cerrado. (Antes el `&& status !== "live"`
+  // dejaba editar partidos EN JUEGO — bug de integridad.)
+  const isOpen = match.status === "scheduled" && !isPredictionLocked(match.kickoff_at);
   if (!isOpen) {
     return { error: "El partido ya está cerrado" as const };
   }

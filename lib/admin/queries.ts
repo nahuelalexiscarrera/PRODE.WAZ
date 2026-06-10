@@ -86,16 +86,42 @@ export type AdminMetrics = {
   predicciones24h: number;
   posts: number;
   comentarios: number;
-  reacciones: number;
+  /** null cuando las métricas están scoped por marca (reaction no tiene brand_id). */
+  reacciones: number | null;
   partidos: number;
   partidosFinalizados: number;
 };
 
-export async function getAdminMetrics(): Promise<AdminMetrics> {
+/** Métricas del panel. Sin `brandId` → totales globales (super_admin).
+ *  Con `brandId` → scoped a esa marca (brand_admin): user/prediction/post
+ *  filtran por brand_id explícito; comments via el post padre; reacciones no
+ *  tienen path de marca (target polimórfico) → null. Partidos quedan globales
+ *  (el torneo es compartido). */
+export async function getAdminMetrics(brandId?: string): Promise<AdminMetrics> {
   const admin = createAdminClient();
   const d7 = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const h24 = new Date(Date.now() - 24 * 3_600_000).toISOString();
   const head = { count: "exact" as const, head: true };
+
+  const sociosQ = admin.from("user").select("*", head).is("deleted_at", null);
+  const sociosNuevosQ = admin.from("user").select("*", head).is("deleted_at", null).gte("joined_at", d7);
+  const prediccionesQ = admin.from("prediction").select("*", head);
+  const predicciones24hQ = admin.from("prediction").select("*", head).gte("updated_at", h24);
+  const postsQ = admin.from("post").select("*", head).is("deleted_at", null);
+  const comentariosQ = brandId
+    ? admin
+        .from("comment")
+        .select("id, post!inner(brand_id)", head)
+        .is("deleted_at", null)
+        .eq("post.brand_id", brandId)
+    : admin.from("comment").select("*", head).is("deleted_at", null);
+  if (brandId) {
+    sociosQ.eq("brand_id", brandId);
+    sociosNuevosQ.eq("brand_id", brandId);
+    prediccionesQ.eq("brand_id", brandId);
+    predicciones24hQ.eq("brand_id", brandId);
+    postsQ.eq("brand_id", brandId);
+  }
 
   const [
     socios,
@@ -108,13 +134,13 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     partidos,
     partidosFinalizados,
   ] = await Promise.all([
-    admin.from("user").select("*", head).is("deleted_at", null),
-    admin.from("user").select("*", head).is("deleted_at", null).gte("joined_at", d7),
-    admin.from("prediction").select("*", head),
-    admin.from("prediction").select("*", head).gte("updated_at", h24),
-    admin.from("post").select("*", head).is("deleted_at", null),
-    admin.from("comment").select("*", head).is("deleted_at", null),
-    admin.from("reaction").select("*", head),
+    sociosQ,
+    sociosNuevosQ,
+    prediccionesQ,
+    predicciones24hQ,
+    postsQ,
+    comentariosQ,
+    brandId ? Promise.resolve(null) : admin.from("reaction").select("*", head),
     admin.from("match").select("*", head),
     admin.from("match").select("*", head).eq("status", "finished"),
   ]);
@@ -126,7 +152,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     predicciones24h: predicciones24h.count ?? 0,
     posts: posts.count ?? 0,
     comentarios: comentarios.count ?? 0,
-    reacciones: reacciones.count ?? 0,
+    reacciones: brandId ? null : (reacciones?.count ?? 0),
     partidos: partidos.count ?? 0,
     partidosFinalizados: partidosFinalizados.count ?? 0,
   };

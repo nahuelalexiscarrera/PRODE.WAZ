@@ -70,7 +70,15 @@ async function assignAdminByEmail(
   const email = rawEmail.trim().toLowerCase();
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return "skipped";
 
-  const { data: u } = await admin.from("user").select("id, role").eq("email", email).maybeSingle();
+  // Lookup case-insensitive: el email guardado puede tener mayúsculas (auth lo
+  // preserva tal como se tipeó) y el .eq() estricto lo perdía → caía al path de
+  // invite, que para un usuario ya existente no se reconciliaba nunca.
+  const emailPattern = email.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const { data: u } = await admin
+    .from("user")
+    .select("id, role")
+    .ilike("email", emailPattern)
+    .maybeSingle();
 
   if (u?.id) {
     await admin

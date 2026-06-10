@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIsAdmin } from "@/lib/users/queries";
+import { runFixtureSync } from "@/lib/football-api/sync";
 
 const resultSchema = z.object({
   matchId: z.string().uuid(),
@@ -72,6 +73,28 @@ export async function setMatchResultAction(input: {
   revalidatePath("/app/prode");
   revalidatePath("/app");
   return { ok: true };
+}
+
+export type SyncFixtureResult =
+  | { ok: true; changes: number; skipped: number }
+  | { ok: false; error: string };
+
+/** Dispara el sync del fixture contra football-data.org a demanda (mismo código
+ *  que el cron). Para el panel de admin: trae partidos nuevos, horarios
+ *  reprogramados y resultados sin esperar la próxima corrida del cron. */
+export async function syncFixtureAction(): Promise<SyncFixtureResult> {
+  if (!(await getIsAdmin())) return { ok: false, error: "No autorizado." };
+
+  try {
+    const summary = await runFixtureSync();
+    revalidatePath("/app/admin/partidos");
+    revalidatePath("/app/prode");
+    revalidatePath("/app");
+    return { ok: true, changes: summary.changes, skipped: summary.skipped };
+  } catch (e) {
+    console.error("[syncFixtureAction] falló", e);
+    return { ok: false, error: "No se pudo sincronizar con football-data.org. Probá de nuevo." };
+  }
 }
 
 /** Edita los puntos bonus de un logro (achievement_catalog). El awarding usa

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getIsAdmin } from "@/lib/users/queries";
+import { getAdminAccess } from "@/lib/users/queries";
 import { getSupportTickets } from "@/lib/support/queries";
 import { ScreenHeader } from "@/components/features/ScreenHeader";
 import { SupportTicketForm } from "@/components/features/SupportTicketForm";
@@ -24,7 +24,8 @@ export default async function SoportePage() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user) redirect("/login");
-  if (!(await getIsAdmin())) notFound();
+  const access = await getAdminAccess();
+  if (!access.isSuperAdmin && !access.isBrandAdmin) notFound();
 
   const tickets = await getSupportTickets();
 

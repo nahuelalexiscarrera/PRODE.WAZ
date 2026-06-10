@@ -14,7 +14,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureUserRowFor } from "@/lib/auth/ensure-user";
+import { ensureUserRowFor, reconcileBrandAdminInvitesFor } from "@/lib/auth/ensure-user";
 import { DEFAULT_BRAND_SLUG } from "@/lib/brands/queries";
 
 /** URL pública del sitio (para el redirect del mail de confirmación). */
@@ -113,7 +113,12 @@ export async function signInAction(
   // Self-heal: si la sesión es válida pero falta la fila public.user (ej. tras un
   // reset de DB, o un signup donde el insert falló), la creamos antes de entrar
   // usando el user del login (no re-lee sesión). El layout también lo cubre.
-  if (signInData.user) await ensureUserRowFor(signInData.user);
+  if (signInData.user) {
+    await ensureUserRowFor(signInData.user);
+    // Invites de brand_admin emitidos DESPUÉS del alta: ensureUserRowFor solo
+    // reconcilia al crear la fila, acá cubrimos al usuario pre-existente.
+    await reconcileBrandAdminInvitesFor(signInData.user);
+  }
   redirect("/app");
 }
 
