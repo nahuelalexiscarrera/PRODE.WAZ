@@ -23,6 +23,10 @@ function slugify(s: string): string {
     .slice(0, 32);
 }
 
+/** Base URL de producción para construir el link de invitación copiable.
+ *  NEXT_PUBLIC_ está expuesto al client; si falta queda relativo. */
+const APP_BASE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+
 interface BrandFormProps {
   mode: "create" | "edit";
   themes: ThemeOption[];
@@ -145,7 +149,7 @@ export function BrandForm({ mode, themes, initial, showStatus = true }: BrandFor
             setSlugEdited(true);
             setSlug(slugify(e.target.value));
           }}
-          helper={`Link de registro: /register?brand=${slug || "slug"}`}
+          helper={`Link de registro: ${APP_BASE}/${slug || "slug"}/register`}
           state={errorField === "slug" ? "error" : "default"}
           leftIcon="building"
         />

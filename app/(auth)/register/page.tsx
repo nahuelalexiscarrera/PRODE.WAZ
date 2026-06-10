@@ -49,6 +49,8 @@ function ResendButton() {
 
 /** Pantalla post-registro: la cuenta se creó pero falta confirmar el email. */
 function ConfirmSentScreen({ email }: { email: string }) {
+  const brand = useBrand();
+  const slugPrefix = brand?.slug ? `/${brand.slug}` : "";
   const [resendState, resendAction] = useFormState<ActionResult | null, FormData>(
     resendConfirmationAction,
     null
@@ -90,7 +92,7 @@ function ConfirmSentScreen({ email }: { email: string }) {
           </p>
         )}
 
-        <Link href="/login" className="mt-8 text-body-sm text-primary font-semibold hover:underline">
+        <Link href={`${slugPrefix}/login`} className="mt-8 text-body-sm text-primary font-semibold hover:underline">
           Volver al inicio de sesión
         </Link>
       </div>
@@ -103,6 +105,8 @@ export default function RegisterPage() {
   const brandSlug = useBrandSlug();
   const brand = useBrand();
   const brandName = brand?.name ?? "WAZ";
+  // Links internos por path branded para no perder la marca al navegar.
+  const slugPrefix = brand?.slug ? `/${brand.slug}` : "";
   const [state, formAction] = useFormState<ActionResult<{ email: string }> | null, FormData>(
     signUpAction,
     null
@@ -118,7 +122,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col px-6 py-10">
       <header className="mb-8">
         <Link
-          href="/login"
+          href={`${slugPrefix}/login`}
           className="inline-flex items-center gap-2 text-body-sm text-text-muted hover:text-text mb-6"
         >
           <Icon name="arrow-left" size={16} />
@@ -249,7 +253,7 @@ export default function RegisterPage() {
 
       <footer className="mt-auto pt-10 text-center text-body-sm text-text-muted">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="text-primary font-semibold hover:underline">
+        <Link href={`${slugPrefix}/login`} className="text-primary font-semibold hover:underline">
           Iniciá sesión
         </Link>
       </footer>

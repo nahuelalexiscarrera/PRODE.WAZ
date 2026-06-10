@@ -15,6 +15,7 @@ import { signInAction, type ActionResult } from "@/lib/auth/actions";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { HoloBg, WazMark, GymLogoHero, useBrandColors } from "@/components/features/auth/AuthDecor";
 import { WazSplash } from "@/components/features/auth/WazSplash";
+import { GoogleAuthButton } from "@/components/features/auth/GoogleAuthButton";
 
 // ─── Input premium (native, alimenta el form action) ───────────────────
 function PInput({
@@ -157,6 +158,8 @@ function ConfirmBanner() {
 // ─── Página ────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const { primary, primaryRgb, brand } = useBrandColors();
+  // Mantener al socio dentro de su marca: los links internos van por path branded.
+  const slugPrefix = brand?.slug ? `/${brand.slug}` : "";
   const [showPw, setShowPw] = useState(false);
   const [state, formAction] = useFormState<ActionResult | null, FormData>(signInAction, null);
   const errorField = state && !state.ok ? state.field : undefined;
@@ -212,6 +215,15 @@ export default function LoginPage() {
             <Suspense fallback={null}>
               <ConfirmBanner />
             </Suspense>
+
+            <GoogleAuthButton />
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0 14px" }}>
+              <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)" }}>o</span>
+              <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+            </div>
+
             <form action={formAction} noValidate style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               <PInput name="email" type="email" label="Email" icon="mail" autoComplete="email" error={errorField === "email"} />
               <PInput
@@ -229,7 +241,7 @@ export default function LoginPage() {
                 </p>
               )}
               <div style={{ textAlign: "right", marginTop: -2 }}>
-                <Link href="/forgot" style={{ fontSize: 11, fontWeight: 600, color: `rgba(${primaryRgb},0.7)` }}>
+                <Link href={`${slugPrefix}/forgot`} style={{ fontSize: 11, fontWeight: 600, color: `rgba(${primaryRgb},0.7)` }}>
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
@@ -240,7 +252,7 @@ export default function LoginPage() {
           {/* Footer */}
           <p style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.28)", animation: "wazFadeInUp 0.8s cubic-bezier(0,0,0,1) 0.3s both" }}>
             ¿Sos socio nuevo?{" "}
-            <Link href="/register" style={{ color: primary, fontWeight: 700 }}>
+            <Link href={`${slugPrefix}/register`} style={{ color: primary, fontWeight: 700 }}>
               Unite al prode
             </Link>
           </p>

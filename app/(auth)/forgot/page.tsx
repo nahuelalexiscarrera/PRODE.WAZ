@@ -6,10 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { useBrand } from "@/components/providers/BrandProvider";
 
 type Status = "idle" | "loading" | "sent" | "error";
 
 export default function ForgotPage() {
+  const brand = useBrand();
+  const slugPrefix = brand?.slug ? `/${brand.slug}` : "";
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -50,7 +53,7 @@ export default function ForgotPage() {
     <div className="min-h-screen flex flex-col px-6 py-10">
       <header className="mb-8">
         <Link
-          href="/login"
+          href={`${slugPrefix}/login`}
           className="inline-flex items-center gap-2 text-body-sm text-text-muted hover:text-text mb-6"
         >
           <Icon name="arrow-left" size={16} />

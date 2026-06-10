@@ -18,6 +18,8 @@ import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
 
+const APP_BASE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+
 function Metric({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1">
@@ -78,8 +80,8 @@ export default async function BrandDetailPage({
           <span className="text-body-sm text-text-muted">
             /{brand.slug} · #{brand.hashtagSuffix}
           </span>
-          <span className="text-[11px] text-text-disabled">
-            Link de registro: /register?brand={brand.slug}
+          <span className="text-[11px] text-text-disabled break-all">
+            Link de registro: {APP_BASE}/{brand.slug}/register
           </span>
         </div>
       </div>

@@ -92,7 +92,7 @@ async function reconcileBrandAdminInvites(
 
 /** Crea la fila public.user para un auth user dado. Idempotente + fail-safe.
  *  Toma el User directamente → seguro en el mismo request que signUp/signIn. */
-export async function ensureUserRowFor(user: User): Promise<void> {
+export async function ensureUserRowFor(user: User, brandSlugOverride?: string): Promise<void> {
   try {
     const admin = createAdminClient();
     const { data: existing } = await admin
@@ -104,12 +104,18 @@ export async function ensureUserRowFor(user: User): Promise<void> {
 
     const meta = (user.user_metadata ?? {}) as {
       name?: string;
+      full_name?: string;
       phone?: string | null;
       referralCode?: string;
       brandSlug?: string;
     };
-    const name = meta.name?.trim() || user.email?.split("@")[0] || "Socio";
-    const requestedSlug = meta.brandSlug?.trim().toLowerCase() || DEFAULT_BRAND_SLUG;
+    // full_name lo provee Google (OAuth). brandSlugOverride viene del callback
+    // OAuth, donde la marca NO viaja en user_metadata sino en el redirect.
+    const name = meta.name?.trim() || meta.full_name?.trim() || user.email?.split("@")[0] || "Socio";
+    const requestedSlug =
+      brandSlugOverride?.trim().toLowerCase() ||
+      meta.brandSlug?.trim().toLowerCase() ||
+      DEFAULT_BRAND_SLUG;
 
     const brandId = await resolveBrandId(admin, requestedSlug);
     if (!brandId) {

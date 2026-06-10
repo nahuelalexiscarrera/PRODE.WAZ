@@ -51,6 +51,24 @@ export async function middleware(request: NextRequest) {
     }
 
     const { pathname } = request.nextUrl;
+
+    // Links de marca legacy: /register?brand=<slug> y /login?brand=<slug> NO
+    // resuelven la marca (el layout server no ve searchParams) → caían a WAZ.
+    // Redirigimos a la ruta branded por path, que sí la resuelve de forma
+    // confiable. Server-side, sin flash WAZ; no genera loop (/<slug>/register
+    // no rematchea estas condiciones).
+    const brandParam = request.nextUrl.searchParams.get("brand");
+    if (
+      brandParam &&
+      /^[a-z0-9-]{2,32}$/.test(brandParam) &&
+      (pathname === "/register" || pathname === "/login")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${brandParam}${pathname}`;
+      url.searchParams.delete("brand");
+      return NextResponse.redirect(url);
+    }
+
     const isAppRoute = pathname.startsWith("/app") || pathname === "/";
     const isAuthRoute =
       pathname.startsWith("/login") ||
