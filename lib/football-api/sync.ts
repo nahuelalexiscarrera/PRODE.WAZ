@@ -191,14 +191,16 @@ export async function runFixtureSync(): Promise<SyncSummary> {
         detail: `${homeCode} vs ${awayCode} (${phase})`,
       });
     } else if (db.fd_id == null) {
-      // Vincular fd_id + refrescar horario y grupo
+      // Vincular fd_id + refrescar horario y grupo. El grupo de la API manda:
+      // una fila seeded pudo quedar con la letra equivocada (mismo cruce, grupo
+      // viejo) y acá se corrige en el mismo paso.
       await supabase
         .from("match")
-        .update({ fd_id: fx.id, kickoff_at: fx.utcDate, group_id: db.group_id ?? groupId })
+        .update({ fd_id: fx.id, kickoff_at: fx.utcDate, group_id: groupId ?? db.group_id })
         .eq("id", db.id);
       db.fd_id = fx.id;
       db.kickoff_at = fx.utcDate;
-      db.group_id = db.group_id ?? groupId;
+      db.group_id = groupId ?? db.group_id;
       changes.push({ fdId: fx.id, action: "linked" });
     } else {
       // Ya vinculado: detectar drift (FIFA reprograma, o group_id incompleto de
