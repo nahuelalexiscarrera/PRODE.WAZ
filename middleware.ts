@@ -9,8 +9,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
+const BRAND_COOKIE = "o2p_brand";
+const BRAND_COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 días
+const SLUG_RE = /^[a-z0-9-]{2,32}$/;
+// /<slug>/(login|register|forgot) — rutas de auth branded.
+const BRANDED_AUTH_RE = /^\/([a-z0-9-]{2,32})\/(login|register|forgot)(?:\/|$)/;
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: request.headers } });
+
+  // Los route handlers de auth (/auth/callback, /auth/confirm) hacen su propio
+  // trabajo: code exchange PKCE y verifyOtp. El middleware NO debe correr
+  // getUser()/refresh ni purgar cookies acá — podría borrar el code_verifier en
+  // pleno roundtrip con Google y romper el login. Early return sin tocar nada.
+  if (request.nextUrl.pathname.startsWith("/auth/")) return response;
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -60,20 +72,38 @@ export async function middleware(request: NextRequest) {
     const brandParam = request.nextUrl.searchParams.get("brand");
     if (
       brandParam &&
-      /^[a-z0-9-]{2,32}$/.test(brandParam) &&
+      SLUG_RE.test(brandParam) &&
       (pathname === "/register" || pathname === "/login")
     ) {
       const url = request.nextUrl.clone();
       url.pathname = `/${brandParam}${pathname}`;
       url.searchParams.delete("brand");
-      return NextResponse.redirect(url);
+      const r = NextResponse.redirect(url);
+      // Memoria de marca: el login genérico que se visite después recuerda el club.
+      r.cookies.set({ name: BRAND_COOKIE, value: brandParam, maxAge: BRAND_COOKIE_MAX_AGE, path: "/" });
+      return r;
+    }
+
+    // Visita a una ruta de auth branded (/<slug>/login|register|forgot): persistir
+    // la marca en cookie. Así el layout (auth) genérico la recuerda (la cookie se
+    // LEÍA pero nunca se escribía → era código muerto) y un retorno por /login no
+    // cae a WAZ.
+    const brandedAuth = pathname.match(BRANDED_AUTH_RE);
+    if (brandedAuth) {
+      response.cookies.set({
+        name: BRAND_COOKIE,
+        value: brandedAuth[1] as string,
+        maxAge: BRAND_COOKIE_MAX_AGE,
+        path: "/",
+      });
     }
 
     const isAppRoute = pathname.startsWith("/app") || pathname === "/";
     const isAuthRoute =
       pathname.startsWith("/login") ||
       pathname.startsWith("/register") ||
-      pathname.startsWith("/forgot");
+      pathname.startsWith("/forgot") ||
+      BRANDED_AUTH_RE.test(pathname);
 
     if (isAppRoute && !hasValidUser && pathname !== "/splash") {
       const url = request.nextUrl.clone();
@@ -83,7 +113,13 @@ export async function middleware(request: NextRequest) {
       // Purga cookies sb-*-auth-token muertas para no rebotar en cada request.
       if (authError) {
         for (const cookie of request.cookies.getAll()) {
-          if (cookie.name.startsWith("sb-") && cookie.name.includes("-auth-token")) {
+          // NO tocar el code-verifier: si un OAuth está en curso, borrarlo rompe
+          // el exchange. Solo purgamos los auth-token muertos.
+          if (
+            cookie.name.startsWith("sb-") &&
+            cookie.name.includes("-auth-token") &&
+            !cookie.name.includes("-code-verifier")
+          ) {
             redirectResponse.cookies.set({ name: cookie.name, value: "", maxAge: 0, path: "/" });
           }
         }

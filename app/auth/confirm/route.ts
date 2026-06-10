@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const nextParam = searchParams.get("next");
-  const next = nextParam?.startsWith("/") ? nextParam : "/app";
+  // Path interno seguro: rechaza open-redirects (//host, /\host).
+  const next =
+    nextParam?.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
+      ? nextParam
+      : "/app";
 
   if (token_hash && type) {
     const supabase = await createClient();

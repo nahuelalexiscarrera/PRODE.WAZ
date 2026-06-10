@@ -139,18 +139,21 @@ function PSubmit({ children }: { children: ReactNode }) {
 function ConfirmBanner() {
   const searchParams = useSearchParams();
   const confirmed = searchParams.get("confirm") === "1";
-  const errorConfirm = searchParams.get("error") === "confirm";
-  if (!confirmed && !errorConfirm) return null;
+  const error = searchParams.get("error");
+  const isError = error === "confirm" || error === "oauth";
+  if (!confirmed && !isError) return null;
+  const message =
+    error === "oauth"
+      ? "No pudimos completar el ingreso con Google. Probá de nuevo o entrá con tu email y contraseña."
+      : error === "confirm"
+        ? "El link de confirmación venció o ya se usó. Entrá con tu contraseña o registrate de nuevo."
+        : "Cuenta creada. Revisá tu email para confirmarla y después entrá.";
   return (
     <div
-      style={{ marginBottom: 14, borderRadius: 12, padding: "11px 13px", display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(255,255,255,0.03)", border: `1px solid ${errorConfirm ? "rgba(239,68,68,0.3)" : "rgba(56,189,248,0.3)"}` }}
+      style={{ marginBottom: 14, borderRadius: 12, padding: "11px 13px", display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(255,255,255,0.03)", border: `1px solid ${isError ? "rgba(239,68,68,0.3)" : "rgba(56,189,248,0.3)"}` }}
     >
-      <Icon name="info" size={16} className={errorConfirm ? "text-error" : "text-info"} />
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
-        {errorConfirm
-          ? "El link de confirmación venció o ya se usó. Entrá con tu contraseña o registrate de nuevo."
-          : "Cuenta creada. Revisá tu email para confirmarla y después entrá."}
-      </p>
+      <Icon name="info" size={16} className={isError ? "text-error" : "text-info"} />
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{message}</p>
     </div>
   );
 }

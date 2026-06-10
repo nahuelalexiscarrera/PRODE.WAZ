@@ -16,16 +16,19 @@ import { Icon } from "@/components/ui/Icon";
 import { useBrand } from "@/components/providers/BrandProvider";
 
 /** Lee y normaliza el brand slug. Prioridad:
- *  1. ?brand=<slug> query param  (links de invitación viejos, backward-compat)
- *  2. BrandProvider context      (cuando la ruta ya incluye el slug, ej: /waz/register)
+ *  1. BrandProvider context      (la ruta incluye el slug, ej: /denise/register —
+ *     es lo que el usuario VE y ya está validado contra la DB por el layout)
+ *  2. ?brand=<slug> query param  (links de invitación viejos, backward-compat)
  *  3. "" → signUpAction usa DEFAULT_BRAND_SLUG ('waz')
  *
+ *  El context gana al query: en /denise/register?brand=otra vale 'denise' (lo que
+ *  se ve), no la marca colada por query.
  *  Acepta solo el formato del schema: /^[a-z0-9-]{2,32}$/ */
 function useBrandSlug(): string {
   const params = useSearchParams();
   const brand = useBrand();
   const fromQuery = params.get("brand")?.trim().toLowerCase() ?? "";
-  const slug = fromQuery || brand?.slug || "";
+  const slug = brand?.slug || fromQuery || "";
   return /^[a-z0-9-]{2,32}$/.test(slug) ? slug : "";
 }
 

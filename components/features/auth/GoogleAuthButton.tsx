@@ -15,6 +15,21 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useBrand } from "@/components/providers/BrandProvider";
 
+const SLUG_RE = /^[a-z0-9-]{2,32}$/;
+
+/** Slug de la marca desde el path branded (/denise/login → "denise"). Fallback
+ *  cuando el contexto de marca llegara null en una pantalla branded — evita que
+ *  el alta por Google quede sin marca y caiga al default. */
+function slugFromPath(): string | null {
+  if (typeof window === "undefined") return null;
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  if (parts.length >= 2 && /^(login|register|forgot)$/.test(parts[1] ?? "")) {
+    const seg = parts[0] ?? "";
+    if (SLUG_RE.test(seg)) return seg;
+  }
+  return null;
+}
+
 function GoogleG() {
   return (
     <svg width={18} height={18} viewBox="0 0 18 18" aria-hidden="true" focusable="false">
@@ -45,16 +60,24 @@ export function GoogleAuthButton({ label = "Continuar con Google" }: { label?: s
   async function go() {
     setLoading(true);
     try {
+      // La marca viaja por COOKIE, no por query del redirectTo. Supabase valida el
+      // redirect_to contra su allowlist sobre la URL COMPLETA (query incluido): un
+      // `?brand=...` rompe el match y Supabase cae al Site URL (producción) →
+      // aterrizabas deslogueado en el login viejo. Con la cookie, el redirectTo
+      // queda limpio y el match es exacto.
+      const slug = brand?.slug || slugFromPath() || "";
+      if (slug && SLUG_RE.test(slug)) {
+        // 10 min, Lax para sobrevivir el redirect de Google (navegación top-level).
+        document.cookie = `waz_oauth_brand=${slug}; max-age=600; path=/; samesite=lax`;
+      }
       // SIEMPRE el origin actual: OAuth debe volver al mismo host donde está el
-      // usuario (localhost, preview de Vercel o producción). NEXT_PUBLIC_APP_URL
-      // apuntaría a producción y rompería el flujo en los otros entornos.
+      // usuario (localhost, preview de Vercel o producción).
       const base = window.location.origin;
-      const slug = brand?.slug ? `&brand=${encodeURIComponent(brand.slug)}` : "";
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${base}/auth/callback?next=/app${slug}`,
+          redirectTo: `${base}/auth/callback`,
           queryParams: { prompt: "select_account" },
         },
       });

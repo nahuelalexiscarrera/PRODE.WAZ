@@ -112,10 +112,15 @@ export async function ensureUserRowFor(user: User, brandSlugOverride?: string): 
     // full_name lo provee Google (OAuth). brandSlugOverride viene del callback
     // OAuth, donde la marca NO viaja en user_metadata sino en el redirect.
     const name = meta.name?.trim() || meta.full_name?.trim() || user.email?.split("@")[0] || "Socio";
-    const requestedSlug =
-      brandSlugOverride?.trim().toLowerCase() ||
-      meta.brandSlug?.trim().toLowerCase() ||
-      DEFAULT_BRAND_SLUG;
+    const hint = brandSlugOverride?.trim().toLowerCase() || meta.brandSlug?.trim().toLowerCase() || "";
+    const requestedSlug = hint || DEFAULT_BRAND_SLUG;
+    // Sin NINGUNA pista de marca, anclamos al default (waz). Lo dejamos registrado
+    // para detectar altas "sin club claro" (el peor caso de producto: socio de un
+    // gym que termina en el prode equivocado). Si hint vino pero no resuelve, el
+    // fallback de resolveBrandId también cae acá — por eso logueamos el pedido.
+    if (!hint) {
+      console.warn(`[ensureUserRowFor] alta sin marca explícita → default '${DEFAULT_BRAND_SLUG}' (user ${user.email})`);
+    }
 
     const brandId = await resolveBrandId(admin, requestedSlug);
     if (!brandId) {
