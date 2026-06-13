@@ -8,6 +8,7 @@ import type { Phase } from "@/types/domain";
 const MATCH_FIELDS = `
   id, phase, group_id, home_code, away_code,
   kickoff_at, venue_city, status,
+  live_home_score, live_away_score, live_updated_at,
   home_team:team!home_code ( code, name ),
   away_team:team!away_code ( code, name ),
   result:match_result ( home_score, away_score, finished_at )
@@ -29,25 +30,11 @@ export async function getMatchesByGroup(groupId: string) {
 
 export type MatchWithTeams = Awaited<ReturnType<typeof getMatchesByGroup>>[number];
 
+/** Próximo partido SCHEDULED (no live: los partidos en curso van por
+ *  getLiveMatches y se muestran en su propia sección "En vivo"). */
 export async function getNextMatch() {
   const supabase = await createClient();
   const now = new Date().toISOString();
-
-  // Primero: partido en vivo (su kickoff_at ya pasó, no filtramos por fecha)
-  const { data: live, error: liveErr } = await supabase
-    .from("match")
-    .select(MATCH_FIELDS)
-    .eq("status", "live")
-    .order("kickoff_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (liveErr) {
-    console.error("[getNextMatch] live query falló", liveErr.message);
-    return null;
-  }
-  if (live) return live;
-
-  // Segundo: próximo partido scheduled
   const { data, error } = await supabase
     .from("match")
     .select(MATCH_FIELDS)
@@ -64,6 +51,24 @@ export async function getNextMatch() {
 }
 
 export type NextMatchRow = Awaited<ReturnType<typeof getNextMatch>>;
+
+/** Partidos EN VIVO (status='live'), con su marcador parcial (live_*).
+ *  Pueden ser varios simultáneos en el Mundial. Ordenados por kickoff. */
+export async function getLiveMatches() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("match")
+    .select(MATCH_FIELDS)
+    .eq("status", "live")
+    .order("kickoff_at", { ascending: true });
+  if (error) {
+    console.error("[getLiveMatches] query falló", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export type LiveMatchRow = Awaited<ReturnType<typeof getLiveMatches>>[number];
 
 export async function getKnockoutMatches() {
   const supabase = await createClient();

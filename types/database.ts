@@ -339,6 +339,9 @@ export type Database = {
           home_code: string
           id: string
           kickoff_at: string
+          live_away_score: number | null
+          live_home_score: number | null
+          live_updated_at: string | null
           phase: Database["public"]["Enums"]["phase_t"]
           status: Database["public"]["Enums"]["match_status_t"]
           tournament_id: string
@@ -352,6 +355,9 @@ export type Database = {
           home_code: string
           id?: string
           kickoff_at: string
+          live_away_score?: number | null
+          live_home_score?: number | null
+          live_updated_at?: string | null
           phase: Database["public"]["Enums"]["phase_t"]
           status?: Database["public"]["Enums"]["match_status_t"]
           tournament_id: string
@@ -365,6 +371,9 @@ export type Database = {
           home_code?: string
           id?: string
           kickoff_at?: string
+          live_away_score?: number | null
+          live_home_score?: number | null
+          live_updated_at?: string | null
           phase?: Database["public"]["Enums"]["phase_t"]
           status?: Database["public"]["Enums"]["match_status_t"]
           tournament_id?: string

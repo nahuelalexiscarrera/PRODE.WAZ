@@ -3,19 +3,30 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/users/queries";
 import { getUnreadNotificationCount } from "@/lib/users/queries";
-import { getNextMatch, type NextMatchRow } from "@/lib/matches/queries";
+import {
+  getNextMatch,
+  getLiveMatches,
+  type NextMatchRow,
+  type LiveMatchRow,
+} from "@/lib/matches/queries";
 import { getCurrentPhase } from "@/lib/matches/queries";
 import { getFeedRecientes } from "@/lib/social/queries";
 import { ScreenHeader } from "@/components/features/ScreenHeader";
 import { NotificationBell } from "@/components/features/NotificationBell";
 import { StatCard } from "@/components/features/StatCard";
 import { NextMatchHero } from "@/components/features/NextMatchHero";
+import { LiveMatchCard } from "@/components/features/LiveMatchCard";
+import { LiveRefresher } from "@/components/features/LiveRefresher";
 import { PhaseProgress } from "@/components/features/PhaseProgress";
 import { PostCardCompact } from "@/components/features/PostCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils/cn";
 import type { UserLevel } from "@/types/domain";
+
+// El Home muestra marcador en vivo → render dinámico (sin cache) para datos
+// frescos en cada request; <LiveRefresher/> lo re-corre mientras haya partidos.
+export const dynamic = "force-dynamic";
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 
@@ -55,6 +66,37 @@ function NextMatchSection({ match }: { match: NextMatchRow }) {
   );
 }
 
+function LiveMatchSection({ matches }: { matches: LiveMatchRow[] }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+        Partidos en vivo
+      </span>
+      {matches.map((m) => {
+        const homeTeam = m.home_team as unknown as TeamRow | null;
+        const awayTeam = m.away_team as unknown as TeamRow | null;
+        if (!homeTeam || !awayTeam) return null;
+        const row = m as unknown as {
+          live_home_score: number | null;
+          live_away_score: number | null;
+        };
+        return (
+          <LiveMatchCard
+            key={m.id}
+            homeCode={m.home_code}
+            awayCode={m.away_code}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+            liveHomeScore={row.live_home_score}
+            liveAwayScore={row.live_away_score}
+            groupId={m.group_id}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
@@ -65,13 +107,15 @@ export default async function HomePage() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user) redirect("/login");
 
-  const [profile, nextMatch, feed, currentPhase, unreadCount] = await Promise.all([
+  const [profile, liveMatches, nextMatch, feed, currentPhase, unreadCount] = await Promise.all([
     getMyProfile(),
+    getLiveMatches(),
     getNextMatch(),
     getFeedRecientes({ limit: 3 }),
     getCurrentPhase(),
     getUnreadNotificationCount(),
   ]);
+  const hasLive = liveMatches.length > 0;
 
   const firstName = profile?.name?.split(" ")?.[0] ?? "Socio";
 
@@ -105,8 +149,15 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Next match hero */}
-      <NextMatchSection match={nextMatch} />
+      {/* En vivo (si hay partidos en curso) o próximo partido */}
+      {hasLive ? (
+        <>
+          <LiveMatchSection matches={liveMatches} />
+          <LiveRefresher />
+        </>
+      ) : (
+        <NextMatchSection match={nextMatch} />
+      )}
 
       {/* Phase progress */}
       <div className="flex flex-col gap-2">

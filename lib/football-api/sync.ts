@@ -225,9 +225,23 @@ export async function runFixtureSync(): Promise<SyncSummary> {
     }
 
     // ── En vivo ──
-    if (status === "live" && db.status === "scheduled") {
-      await supabase.from("match").update({ status: "live" }).eq("id", db.id);
-      changes.push({ fdId: fx.id, action: "set_live" });
+    // Setea status='live' (la 1ra vez) y SIEMPRE refresca el marcador parcial en
+    // las columnas live_* para que el Home lo muestre. fullTime trae el marcador
+    // actual durante IN_PLAY; lo mapeamos al orden home/away de NUESTRA fila.
+    if (status === "live") {
+      const gh = fx.score?.fullTime?.home;
+      const ga = fx.score?.fullTime?.away;
+      const liveHome = gh == null ? null : homeCode === db.home_code ? gh : ga;
+      const liveAway = ga == null ? null : homeCode === db.home_code ? ga : gh;
+      const patch: Record<string, unknown> = {
+        live_home_score: liveHome,
+        live_away_score: liveAway,
+        live_updated_at: new Date().toISOString(),
+      };
+      const firstLive = db.status === "scheduled";
+      if (firstLive) patch.status = "live";
+      await supabase.from("match").update(patch).eq("id", db.id);
+      if (firstLive) changes.push({ fdId: fx.id, action: "set_live" });
     }
 
     // ── Postergado ──
@@ -271,7 +285,12 @@ export async function runFixtureSync(): Promise<SyncSummary> {
         }
         const { error: mErr } = await supabase
           .from("match")
-          .update({ status: "finished" })
+          .update({
+            status: "finished",
+            live_home_score: null,
+            live_away_score: null,
+            live_updated_at: null,
+          })
           .eq("id", db.id);
         if (mErr) {
           warn("match-finished-error", `${db.id}: ${mErr.message}`);
