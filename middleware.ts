@@ -14,6 +14,8 @@ const BRAND_COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 días
 const SLUG_RE = /^[a-z0-9-]{2,32}$/;
 // /<slug>/(login|register|forgot) — rutas de auth branded.
 const BRANDED_AUTH_RE = /^\/([a-z0-9-]{2,32})\/(login|register|forgot)(?:\/|$)/;
+// /(login|register|forgot) — rutas de auth genéricas (sin marca en el path).
+const GENERIC_AUTH_RE = /^\/(login|register|forgot)(?:\/|$)/;
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: request.headers } });
@@ -63,6 +65,26 @@ export async function middleware(request: NextRequest) {
     }
 
     const { pathname } = request.nextUrl;
+
+    // Single-tenant: si ONLY_BRAND_SLUG está seteada, Energym es la única marca
+    // pública. Toda llegada de auth (genérica /login o branded /<otra>/login) se
+    // redirige a /<only>/... para que nadie caiga en la marca equivocada ni vea
+    // el branding suelto. /<only>/... no rematchea → sin loop. Preserva la query
+    // (?redirect=). No toca /app ni /auth/* (este último ya hizo early-return).
+    const onlyBrand = process.env.ONLY_BRAND_SLUG?.trim().toLowerCase();
+    if (onlyBrand && SLUG_RE.test(onlyBrand)) {
+      const branded = pathname.match(BRANDED_AUTH_RE);
+      if (branded && branded[1] !== onlyBrand) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/${onlyBrand}${pathname.slice((branded[1] as string).length + 1)}`;
+        return NextResponse.redirect(url);
+      }
+      if (!branded && GENERIC_AUTH_RE.test(pathname)) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/${onlyBrand}${pathname}`;
+        return NextResponse.redirect(url);
+      }
+    }
 
     // Links de marca legacy: /register?brand=<slug> y /login?brand=<slug> NO
     // resuelven la marca (el layout server no ve searchParams) → caían a WAZ.

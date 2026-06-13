@@ -33,12 +33,23 @@ export async function shareToWall(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "No autenticado." };
 
+  // post.brand_id es NOT NULL — lo derivamos del autor para aislar el muro por
+  // marca, igual que createPost. Sin esto el insert viola el NOT NULL.
+  const { data: userRow } = await supabase
+    .from("user")
+    .select("brand_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const brandId = (userRow as { brand_id?: string } | null)?.brand_id;
+  if (!brandId) return { ok: false, error: "No se pudo publicar en el muro." };
+
   const params = new URLSearchParams({ format: "square" });
   if (parsed.data.contextId) params.set("contextId", parsed.data.contextId);
   const imageUrl = `/api/share/${parsed.data.template}/${user.id}?${params.toString()}`;
 
   const { error } = await supabase.from("post").insert({
     user_id: user.id,
+    brand_id: brandId,
     body: parsed.data.body,
     image_url: imageUrl,
     image_width: 1080,

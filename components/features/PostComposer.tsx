@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { createPost } from "@/lib/social/actions";
 import { AchievementModal, type UnlockedAchievement } from "@/components/features/AchievementModal";
+import { ShareButton } from "@/components/features/ShareButton";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import type { FeedPost } from "@/lib/social/types";
@@ -18,8 +19,6 @@ interface PostComposerProps {
   myInitials: string;
   myAvatarUrl: string | null;
   myLevel: UserLevel;
-  /** Solo el admin puede adjuntar imágenes (fotos de premios). */
-  isAdmin?: boolean;
   onPost: (post: FeedPost) => void;
 }
 
@@ -29,7 +28,6 @@ export function PostComposer({
   myInitials,
   myAvatarUrl,
   myLevel,
-  isAdmin = false,
   onPost,
 }: PostComposerProps) {
   const [body, setBody] = useState("");
@@ -75,7 +73,7 @@ export function PostComposer({
       let imageWidth: number | undefined;
       let imageHeight: number | undefined;
 
-      if (isAdmin && imageFile && imagePreview) {
+      if (imageFile && imagePreview) {
         const supabase = createClient();
         const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
         const path = `${myUserId}/${crypto.randomUUID()}.${ext}`;
@@ -169,8 +167,8 @@ export function PostComposer({
         />
       </div>
 
-      {/* Image preview (solo admin) */}
-      {isAdmin && imagePreview && (
+      {/* Image preview */}
+      {imagePreview && (
         <div className="relative rounded-lg overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -192,31 +190,34 @@ export function PostComposer({
       {/* Bottom bar */}
       <div className="flex items-center justify-between pt-1 border-t border-border">
         <div className="flex items-center gap-1">
-          {isAdmin && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading || imagePreview !== null}
-                className={cn(
-                  "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors",
-                  "text-text-muted hover:text-primary hover:bg-primary/5",
-                  "disabled:opacity-40 disabled:cursor-not-allowed"
-                )}
-                aria-label="Adjuntar imagen"
-              >
-                <Icon name="download" size={14} />
-                Foto
-              </button>
-            </>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading || imagePreview !== null}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors",
+              "text-text-muted hover:text-primary hover:bg-primary/5",
+              "disabled:opacity-40 disabled:cursor-not-allowed"
+            )}
+            aria-label="Adjuntar imagen"
+          >
+            <Icon name="download" size={14} />
+            Foto
+          </button>
+          {/* Compartir la tarjeta del prode (PNG de /api/share) como post del muro. */}
+          <ShareButton
+            template="position"
+            userId={myUserId}
+            label="Mi prode"
+            className="h-8 gap-1.5 rounded-lg bg-transparent px-2 py-1.5 text-[11px] text-text-muted hover:bg-primary/5 hover:text-primary"
+          />
         </div>
 
         <div className="flex items-center gap-3">

@@ -998,10 +998,17 @@ CREATE TRIGGER trg_comment_count_change
   AFTER INSERT OR DELETE OR UPDATE OF deleted_at ON comment
   FOR EACH ROW EXECUTE FUNCTION trg_comment_count();
 
--- ─── 5. Storage: bucket post-images (subida admin, lectura pública) ───
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('post-images', 'post-images', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+-- ─── 5. Storage: bucket post-images ───────────────────────────────────
+-- Subida abierta a TODOS los socios (cada uno a su carpeta {uid}/...); lectura
+-- pública; borrado del dueño o admin. Límite 5 MB + MIME imagen.
+-- (Actualizado en 20260615000002_post_images_members.sql; antes era solo-admin.)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('post-images', 'post-images', true, 5242880,
+        ARRAY['image/jpeg', 'image/png', 'image/webp'])
+ON CONFLICT (id) DO UPDATE
+  SET public = true,
+      file_size_limit = 5242880,
+      allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp'];
 
 DROP POLICY IF EXISTS "post-images lectura pública" ON storage.objects;
 CREATE POLICY "post-images lectura pública"
@@ -1009,14 +1016,23 @@ CREATE POLICY "post-images lectura pública"
   USING (bucket_id = 'post-images');
 
 DROP POLICY IF EXISTS "post-images subida admin" ON storage.objects;
-CREATE POLICY "post-images subida admin"
+DROP POLICY IF EXISTS "post-images subida socio" ON storage.objects;
+CREATE POLICY "post-images subida socio"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'post-images' AND public.is_admin());
+  WITH CHECK (
+    bucket_id = 'post-images'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 DROP POLICY IF EXISTS "post-images borrado admin" ON storage.objects;
-CREATE POLICY "post-images borrado admin"
+DROP POLICY IF EXISTS "post-images borrado dueño o admin" ON storage.objects;
+CREATE POLICY "post-images borrado dueño o admin"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'post-images' AND public.is_admin());
+  USING (
+    bucket_id = 'post-images'
+    AND ((storage.foldername(name))[1] = auth.uid()::text OR public.is_admin())
+  );
 
 
 -- ====================================================================

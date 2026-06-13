@@ -155,7 +155,6 @@ export function WallFeed({
             myInitials={myInitials}
             myAvatarUrl={myAvatarUrl}
             myLevel={myLevel}
-            isAdmin={isAdmin}
             onPost={handleNewPost}
           />
         )}

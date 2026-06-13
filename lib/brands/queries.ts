@@ -15,7 +15,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Brand, BrandContext, Theme, ThemeTokens } from "@/types/domain";
 import { cache } from "react";
 
-const DEFAULT_BRAND_SLUG = "waz";
+// Modo single-tenant: si ONLY_BRAND_SLUG está seteada (ej. "energym"), esa es la
+// marca por defecto y la única pública. Sin la env, multi-marca con default "waz".
+// El middleware además redirige toda llegada de otra marca a ONLY_BRAND_SLUG.
+const ONLY_BRAND_SLUG = process.env.ONLY_BRAND_SLUG?.trim().toLowerCase() || null;
+const DEFAULT_BRAND_SLUG = ONLY_BRAND_SLUG ?? "waz";
 
 const BRAND_WITH_THEME_COLS = `
   id, slug, name, short_name, sub_brand, hashtag_suffix, logo_url,
@@ -102,9 +106,9 @@ export const getBrandBySlug = cache(async (slug: string): Promise<BrandContext |
   }
 });
 
-/** Marca default (O2) — fallback cuando el usuario está pre-auth y no hay
- *  query param ni cookie. Garantiza que las páginas públicas siempre tengan
- *  un branding para pintar. */
+/** Marca default — fallback cuando el usuario está pre-auth y no hay query param
+ *  ni cookie. En single-tenant es ONLY_BRAND_SLUG; si no, "waz". Garantiza que
+ *  las páginas públicas siempre tengan un branding para pintar. */
 export const getDefaultBrand = cache(async (): Promise<BrandContext | null> => {
   return getBrandBySlug(DEFAULT_BRAND_SLUG);
 });

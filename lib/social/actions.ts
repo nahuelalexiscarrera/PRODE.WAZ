@@ -16,11 +16,22 @@ import type { UnlockedAchievement } from "@/components/features/AchievementModal
 
 // ─── Schemas ──────────────────────────────────────────────────────────
 
+// Ahora cualquier socio puede adjuntar imagen (antes solo admin). Para que no se
+// puedan postear URLs externas arbitrarias (hotlinking, tracking, contenido de
+// fuera), la imagen DEBE venir del bucket público post-images de NUESTRO Storage.
+// La tarjeta del prode (/api/share, ruta relativa) la inserta shareToWall aparte,
+// sin pasar por este schema.
+const POST_IMAGE_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/post-images/`;
+
 const postSchema = z.object({
   body: z.string().min(1).max(280),
   embedType: z.enum(["prediction", "match"]).optional(),
   embedRefId: z.string().uuid().optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z
+    .string()
+    .url()
+    .refine((u) => u.startsWith(POST_IMAGE_PREFIX), { message: "Origen de imagen no permitido" })
+    .optional(),
   imageWidth: z.number().int().positive().max(8000).optional(),
   imageHeight: z.number().int().positive().max(8000).optional(),
 });
