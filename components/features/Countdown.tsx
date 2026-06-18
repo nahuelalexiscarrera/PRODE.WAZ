@@ -35,5 +35,13 @@ export function Countdown({ kickoffAt, prefix = "Faltan", className }: Countdown
 
   const label = remaining <= 0 ? "En curso" : `${prefix} ${formatMs(remaining)}`;
 
-  return <span className={cn("tabular-nums", className)}>{label}</span>;
+  // El valor depende de Date.now(): la hora del server (SSR) y la del cliente
+  // (hydration) difieren por segundos → React #418 (text mismatch). suppressHydra-
+  // tionWarning es el patrón oficial para timestamps/countdowns: el cliente corrige
+  // el texto al hidratar sin lanzar el error; el setInterval lo mantiene al día.
+  return (
+    <span suppressHydrationWarning className={cn("tabular-nums", className)}>
+      {label}
+    </span>
+  );
 }
