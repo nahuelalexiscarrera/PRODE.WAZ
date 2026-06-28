@@ -27,6 +27,7 @@ type MatchRow = {
   away_code: string;
   kickoff_at: string;
   status: string;
+  excluded_from_completion: boolean;
 };
 type ResultRow = { match_id: string; home_score: number; away_score: number };
 
@@ -40,7 +41,7 @@ export async function evaluateMatchSettledForUsers(userIds: string[]): Promise<v
   const admin = createAdminClient();
 
   const [matchesRes, resultsRes, specialsRes, usersRes, predsRes] = await Promise.all([
-    admin.from("match").select("id, phase, group_id, home_code, away_code, kickoff_at, status"),
+    admin.from("match").select("id, phase, group_id, home_code, away_code, kickoff_at, status, excluded_from_completion"),
     admin.from("match_result").select("match_id, home_score, away_score"),
     admin.from("special_prediction").select("user_id, champion_code, runner_up_code").in("user_id", ids),
     admin.from("user").select("id, position").in("id", ids),
@@ -90,7 +91,12 @@ export async function evaluateMatchSettledForUsers(userIds: string[]): Promise<v
     tournamentWinnerUserId = (leader?.id as string) ?? null;
   }
 
-  const totalMatches = matches.length;
+  // Partidos excluidos de la completitud (incidentes de plataforma): no cuentan
+  // para C03 "Todoterreno", ni en el denominador ni en el numerador.
+  const excludedIds = new Set(
+    matches.filter((m) => m.excluded_from_completion).map((m) => m.id)
+  );
+  const totalMatches = matches.length - excludedIds.size;
 
   for (const userId of ids) {
     try {
@@ -107,6 +113,7 @@ export async function evaluateMatchSettledForUsers(userIds: string[]): Promise<v
         tournamentEnded,
         tournamentWinnerUserId,
         totalMatches,
+        excludedIds,
       });
       await processAchievements("match-settled", ctx);
     } catch (e) {
@@ -128,6 +135,7 @@ function buildContext(args: {
   tournamentEnded: boolean;
   tournamentWinnerUserId: string | null;
   totalMatches: number;
+  excludedIds: Set<string>;
 }): TriggerContext {
   const { preds, matchById, resultByMatch } = args;
 
@@ -184,8 +192,10 @@ function buildContext(args: {
     ...v,
   }));
 
+  // Numerador sin partidos excluidos, coherente con el denominador (totalMatches).
+  const predCount = preds.filter((p) => !args.excludedIds.has(p.match_id)).length;
   const tournamentCompletionPercent =
-    args.totalMatches > 0 ? (preds.length / args.totalMatches) * 100 : 0;
+    args.totalMatches > 0 ? (predCount / args.totalMatches) * 100 : 0;
 
   return {
     userId: args.userId,
