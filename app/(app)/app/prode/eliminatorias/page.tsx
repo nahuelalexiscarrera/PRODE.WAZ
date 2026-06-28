@@ -75,13 +75,11 @@ export default async function KnockoutPage() {
       <div className="flex flex-col gap-4 px-4">
         {PHASES.map(({ phase, label, multiplier, unlockLabel }) => {
           const phaseMatches = allMatches.filter((m) => m.phase === phase);
-          const now = Date.now();
-          const firstKickoff =
-            phaseMatches[0]?.kickoff_at != null
-              ? new Date(phaseMatches[0].kickoff_at).getTime()
-              : null;
-          const isLocked =
-            phaseMatches.length === 0 || (firstKickoff !== null && firstKickoff > now + 3600_000);
+          // La fase se abre apenas se conocen los cruces: el sync crea los partidos
+          // de knockout SOLO cuando la API ya definió ambos equipos, así que tener
+          // partidos = cruces definidos. Cada partido mantiene su cierre 5 min antes
+          // del kickoff (MatchCard) → no hace falta un gate temporal por fase.
+          const isLocked = phaseMatches.length === 0;
 
           return (
             <div key={phase} className="flex flex-col gap-3">
