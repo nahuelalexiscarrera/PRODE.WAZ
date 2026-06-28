@@ -122,6 +122,7 @@ export default async function KnockoutPage() {
                         resultHome={result?.home_score ?? null}
                         resultAway={result?.away_score ?? null}
                         pointsEarned={pred?.points_earned ?? null}
+                        isBonusMatch={match.is_bonus_match}
                       />
                     );
                   })}

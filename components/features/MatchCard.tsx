@@ -29,6 +29,7 @@ interface MatchCardProps {
   resultHome?: number | null;
   resultAway?: number | null;
   pointsEarned?: number | null;
+  isBonusMatch?: boolean;
   className?: string;
 }
 
@@ -70,6 +71,7 @@ export function MatchCard({
   resultHome,
   resultAway,
   pointsEarned,
+  isBonusMatch,
   className,
 }: MatchCardProps) {
   const [homeValue, setHomeValue] = useState<number | null>(predictionHome);
@@ -165,6 +167,15 @@ export function MatchCard({
           </span>
         )}
       </div>
+
+      {/* Badge puntos dobles (compensación) */}
+      {isBonusMatch && !isSettled && (
+        <div className="flex justify-center mb-2">
+          <span className="text-[10px] font-bold tracking-wide text-warning bg-warning/10 px-2.5 py-0.5 rounded-full">
+            PUNTOS DOBLES
+          </span>
+        </div>
+      )}
 
       {/* Teams + score — grid de 3 columnas: equipo · marcador · equipo */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">

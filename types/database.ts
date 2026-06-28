@@ -338,6 +338,7 @@ export type Database = {
           group_id: string | null
           home_code: string
           id: string
+          is_bonus_match: boolean
           kickoff_at: string
           live_away_score: number | null
           live_home_score: number | null
@@ -354,6 +355,7 @@ export type Database = {
           group_id?: string | null
           home_code: string
           id?: string
+          is_bonus_match?: boolean
           kickoff_at: string
           live_away_score?: number | null
           live_home_score?: number | null
@@ -370,6 +372,7 @@ export type Database = {
           group_id?: string | null
           home_code?: string
           id?: string
+          is_bonus_match?: boolean
           kickoff_at?: string
           live_away_score?: number | null
           live_home_score?: number | null

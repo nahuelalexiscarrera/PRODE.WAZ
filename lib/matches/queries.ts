@@ -7,7 +7,7 @@ import type { Phase } from "@/types/domain";
 
 const MATCH_FIELDS = `
   id, phase, group_id, home_code, away_code,
-  kickoff_at, venue_city, status,
+  kickoff_at, venue_city, status, is_bonus_match,
   live_home_score, live_away_score, live_updated_at,
   home_team:team!home_code ( code, name ),
   away_team:team!away_code ( code, name ),
